@@ -1,6 +1,8 @@
 # stateless-auth
 Support for authenticated requests without server-side session state
 
+NB: This is a work in progress! Not ready for use just yet.
+
 Provides the server-side bits for authentication and retrieval of basic user information from various OAuth2 providers.
 
 Currently supports authentication with:
@@ -17,29 +19,28 @@ The process is like this:
 * stateless-auth communicates with the target provider (e.g. google) to retrieve basic user details: id, name, email and picture url.
 * stateless-auth creates a signed Json Web Token (JWT) from the user details and responds with both the JWT and the unencoded user details.
 * Each request that requires authentication includes the JWT in the Authorization Header.
-*   
 
 ## Installation
 
-  npm install --save stateless-auth
+    npm install --save stateless-auth
 
 ## Example usage  
 
-  const express = require('express');
-  const bodyParser = require('body-parser');
+    const express = require('express');
+    const bodyParser = require('body-parser');
 
-  const options = {
-    jwt: { secret: 'MY_APPLICATION_JWT_SECRET' },
-    providers: {
-      facebook: { clientSecret: 'MY_FACEBOOK_CLIENT_SECRET' }
-    }
-  };
-  const statelessAuth = require('stateless-auth')(options);
+    const options = {
+      jwt: { secret: 'MY_APPLICATION_JWT_SECRET' },
+      providers: {
+        facebook: { clientSecret: 'MY_FACEBOOK_CLIENT_SECRET' }
+      }
+    };
+    const statelessAuth = require('stateless-auth')(options);
 
-  const app = express();
-  app.use(bodyParser.json());
-  app.use('/auth', statelessAuth.routes);
-  app.use('/secure', statelessAuth.verifier);
+    const app = express();
+    app.use(bodyParser.json());
+    app.use('/auth', statelessAuth.routes);
+    app.use('/secure', statelessAuth.verifier);
 
 
 
