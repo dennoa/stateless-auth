@@ -1,0 +1,37 @@
+{
+  "name": "stateless-auth",
+  "version": "0.0.1",
+  "description": "Auth2 support for APIs",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/*.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://dennoa@github.com/dennoa/stateless-auth.git"
+  },
+  "keywords": [
+    "oauth2",
+    "jwt",
+    "api",
+    "express"
+  ],
+  "author": "dennoa",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dennoa/stateless-auth/issues"
+  },
+  "homepage": "https://github.com/dennoa/stateless-auth#readme",
+  "devDependencies": {
+    "body-parser": "^1.15.2",
+    "chai": "^3.5.0",
+    "mocha": "^3.0.2",
+    "sinon": "^1.17.5"
+  },
+  "dependencies": {
+    "express": "^4.14.0",
+    "jwt-simple": "^0.5.0",
+    "lodash": "^4.15.0",
+    "request": "^2.74.0"
+  }
+}
