@@ -1,6 +1,6 @@
 {
   "name": "stateless-auth",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Auth2 support for APIs",
   "main": "index.js",
   "scripts": {

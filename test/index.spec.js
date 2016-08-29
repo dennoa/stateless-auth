@@ -73,7 +73,7 @@ describe('stateless-auth', ()=> {
   [ { name: 'facebook', qsOrForm: 'qs', userInfo: { id: '213', email: 'email@facebook', name: 'My name' } },
     { name: 'github', qsOrForm: 'qs', authHeader: 'token ', userInfo: { id: '321', email: 'email@github', name: 'Your name', avatar_url: 'https://my.avatar.com/me.jpg' } },
     { name: 'google', qsOrForm: 'form', authHeader: 'Bearer ', userInfo: { id: '987', email: 'email@google', name: 'Bob Jones', picture: 'https://my.pic.com/google.jpg' } },
-    { name: 'linkedin', qsOrForm: 'form', userInfo: { id: '879', emailAddress: 'email@linkedin', firstName: 'Cindy', lastName: 'Mindy', pictureUrl: 'https://my.pic.com/me.jpg' } }
+    { name: 'linkedin', qsOrForm: 'form', authHeader: 'Bearer ', userInfo: { id: '879', emailAddress: 'email@linkedin', firstName: 'Cindy', lastName: 'Mindy', pictureUrl: 'https://my.pic.com/me.jpg' } }
   ].forEach(provider => {
 
     describe('when handling ' + provider.name + ' authentication requests', ()=> {
@@ -132,6 +132,7 @@ describe('stateless-auth', ()=> {
           } else {
             expect(reqParams.qs.access_token).to.equal(tokenResponse.access_token);
           }
+          expect(reqParams.headers['User-Agent']).to.equal('Node');
           expect(reqParams.json).to.equal(true);
           expect(reqParams.proxy).to.equal(statelessAuthInstance.options.proxy);
           done();
