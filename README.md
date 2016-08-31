@@ -197,6 +197,7 @@ If you need a different handler implementation for any reason, you can configure
 
       return (tokenParams, callback) => {
 
+        //Note that tokenParams will contain the entire request body merged with the relevant client_secret and a grant_type of 'authorization_code'
         //Lookup the access token using the tokenParams
         //Lookup the user info using the access token
         //callback(null, userInfo);
