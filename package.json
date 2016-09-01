@@ -1,10 +1,10 @@
 {
   "name": "stateless-auth",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Support for authenticated requests without server-side session state",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/*.spec.js"
+    "test": "mocha test/**/*.spec.js"
   },
   "repository": {
     "type": "git",

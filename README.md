@@ -27,9 +27,20 @@ The process is like this:
 ### Create an auth module with your configuration options
 
     module.exports = require('stateless-auth')({
-      jwt: { secret: 'MY_APPLICATION_JWT_SECRET' },
+      jwt: { 
+        secret: 'MY_APPLICATION_JWT_SECRET' 
+      },
       providers: {
-        facebook: { clientSecret: 'MY_FACEBOOK_CLIENT_SECRET' }
+        facebook: { 
+          clientSecret: 'MY_FACEBOOK_CLIENT_SECRET' 
+        },
+        login: {
+          findUser: (credentials, callback) => {
+            //TODO: Lookup user info and callback
+            //e.g. UserModel.findOne({ username: credentials.username }, callback);
+            callback(null, null);
+          }
+        }
       }
     });
 
@@ -87,6 +98,8 @@ The process is like this:
 ### Global options
 Any of the default options can be overridden. See below for an explanation and the default options.
 
+Note: {{provider}} is one of facebook, google, github or linkedin
+
 * jwt.secret is used to create a JWT from the user info and to decode the JWT on subsequent requests. Set this to something that only your application knows about.
 * jwt.expiresAfterSecs determines how long it takes for a JWT to expire.
 * providers.{{provider}}.tokenEndpoint is the endpoint for the token request.
@@ -98,6 +111,7 @@ Any of the default options can be overridden. See below for an explanation and t
   be as a form on a POST request. If falsy, data will be sent as a querystring on a GET request.
 * providers.{{provider}}.userInfoEndpointAuthorizationHeader is used by the default mechanism for retrieving user information. If specified, the value will be used to
   construct an Authorization header containing the access token. If not specified, the access token will be sent to the provider as a querystring.
+* providers.login configures the default mechanism for authenticating with a username and password. See below for more details on configuring this option.
 * proxy should be set to the address of your proxy server if you are running in an environment where access to the OAuth2 provider is via a corporate proxy or something similar.
 * secure.reslocal can be set to the name of a property on "res.locals" where the decoded JWT for the current request should be put. Use this to specify a variable name that will
   be used wherever the auth.secure() middleware is used. Note that the variable name specified here can be overridden by any individual auth.secure() instance as outlined above.
@@ -107,7 +121,7 @@ Any of the default options can be overridden. See below for an explanation and t
     module.exports = require('stateless-auth')({
 
       jwt: {
-        secret: 'MY_APPLICATION_JWT_SECRET',
+        secret: 'JWT_SECRET',
         expiresAfterSecs: 12*60*60
       },
 
@@ -172,6 +186,18 @@ Any of the default options can be overridden. See below for an explanation and t
           },
           tokenEndpointRequiresFormPost: true,
           userInfoEndpointAuthorizationHeader: 'Bearer'
+        },
+
+        login: {
+          handler: defaultLoginHandler,
+          standardiseUserInfo: (userInfo)=> {
+            return {
+              ids: { login: userInfo.username },
+              email: userInfo.email,
+              name: userInfo.name,
+              picture: userInfo.picture
+            };
+          }
         }
 
       },
@@ -183,6 +209,65 @@ Any of the default options can be overridden. See below for an explanation and t
       }
 
     });
+
+### Default login options
+The default support for logging in with a username and password has a minimum requirement that a findUser function be implemented. The default implementation calls back with
+an error reminding you to provide an implementation appropriate to your application. There are other defaults that you may need to override in order to conform with the way
+your application models user info.
+
+The default login options are:
+
+    login: {
+      handler: defaultLoginHandler,
+
+      standardiseUserInfo: (userInfo)=> {
+        return {
+          ids: { login: userInfo.username },
+          email: userInfo.email,
+          name: userInfo.name,
+          picture: userInfo.picture
+        };
+      },
+
+      findUser: (credentials, callback) => {
+        callback({ error: 'An implemenation for findUser must be provided' });
+      },
+
+      hashPassword: hashPassword,
+
+      modelmap: {
+        credentials: {
+          password: 'password'
+        },
+        userInfo: {
+          passwordHash: 'passwordHash'
+        }
+      }      
+    }
+
+* login.handler specifies the login handler. See the section below on adding another provider if you want to implement your own login handler rather than use the default.
+  If you use your own login handler, then the rest of the configuration options are not really relevant.
+* login.standardiseUserInfo maps the user info from the login.findUser function to the standard format used by your application. See global options above for more details
+  about this. You will likely want to change this to conform with the format of the user info supplied by your login.findUser function.
+* login.findUser MUST be overridden by your application-specific implementation. If you are using mongoose you might code something like this:
+
+    module.exports = require('stateless-auth')({
+      providers: {
+        login: {
+          findUser: (credentials, callback) => {
+            UserModel.findOne({ username: credentials.username }, callback);
+          }
+        }
+      }
+    });
+
+  The credentials passed to login.findUser will be whatever is posted on the /auth/login request.
+* login.hashPassword specifies the password hashing function. The default is sha256 formatted as base64. The default implementation assumes the application holds a hash of
+  the password as part of the user info (no actual password should be stored).
+* login.modelmap.credentials.password specifies the name of the property that holds the password as posted on the /auth/login request. Override this if you want to use a name
+  other than 'password' such as 'loginPassword' for example.
+* login.modelmap.userInfo.passwordHash specifies the name of the property on the user info model that holds the password hash. Override this if you want to use a name
+  other than 'passwordHash'.
 
 ## Adding another provider
 You can add additional providers by simply adding them to the configuration options. If the implementation for retrieving the access token and subsequently the basic user
