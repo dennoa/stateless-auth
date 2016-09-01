@@ -211,9 +211,13 @@ Note: {{provider}} is one of facebook, google, github or linkedin
     });
 
 ### Default login options
-The default support for logging in with a username and password has a minimum requirement that a findUser function be implemented. The default implementation calls back with
-an error reminding you to provide an implementation appropriate to your application. There are other defaults that you may need to override in order to conform with the way
-your application models user info.
+The default implementation for logging in with a username and password assumes the application holds a hash of the password as part of the user info (no actual password should
+be stored). It looks for a password property on the auth/login request and a passwordHash property on the user info model. (These names can be overridden).
+
+At a minimum, a custom findUser function must be provided. The default implementation calls back with an error reminding you to provide an implementation appropriate to your
+application. 
+
+See below for other defaults that you may need also want to override.
 
 The default login options are:
 
@@ -262,8 +266,16 @@ The default login options are:
     });
 
   The credentials passed to login.findUser will be whatever is posted on the /auth/login request.
-* login.hashPassword specifies the password hashing function. The default is sha256 formatted as base64. The default implementation assumes the application holds a hash of
-  the password as part of the user info (no actual password should be stored).
+* login.hashPassword specifies the password hashing function. The default implementation is sha256 formatted as base64. It can be overridden something like this:
+
+      providers: {
+        login: {
+          hashPassword: (clearPassword) => {
+            //TODO: return hashIt(clearPassword);
+          }
+        }
+      }
+
 * login.modelmap.credentials.password specifies the name of the property that holds the password as posted on the /auth/login request. Override this if you want to use a name
   other than 'password' such as 'loginPassword' for example.
 * login.modelmap.userInfo.passwordHash specifies the name of the property on the user info model that holds the password hash. Override this if you want to use a name

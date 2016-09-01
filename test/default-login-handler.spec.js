@@ -44,13 +44,17 @@ describe('default login handler', ()=> {
     expect(res.body.user_info.picture).to.equal(decoded.picture);
   }
 
+  function verifyResponse(res) {
+    expect(res.body.user_info.ids.login).to.equal(userInfo.username);
+    expect(res.body.user_info.email).to.equal(userInfo.email);
+    expect(res.body.user_info.name).to.equal(userInfo.name);
+    expect(res.body.user_info.picture).to.equal(userInfo.picture);
+    verifyJWT(res);
+  }
+
   it('should login when the login-handler has been configured with an appropriate findUser function', (done)=> {
     sendAuthLoginRequest({ username: userInfo.username, password: 'secret' }).expect(200).end((err, res) => {
-      expect(res.body.user_info.ids.login).to.equal(userInfo.username);
-      expect(res.body.user_info.email).to.equal(userInfo.email);
-      expect(res.body.user_info.name).to.equal(userInfo.name);
-      expect(res.body.user_info.picture).to.equal(userInfo.picture);
-      verifyJWT(res);
+      verifyResponse(res);
       done();
     });
   });
@@ -65,6 +69,86 @@ describe('default login handler', ()=> {
 
   it('should return an unauthorized response when the login credentials are invalid', (done)=> {
     sendAuthLoginRequest({ username: userInfo.username, password: 'incorrect' }).expect(401, done);
+  });
+
+  it('should allow standardiseUserInfo to be overridden to conform to the application model', (done)=> {
+    userInfo = { id: 'xyz', passwordHash: hashPassword('secret'), name: { first: 'Bob', last: 'Brown' }, email: 'bob.brown@email.com', picture: 'http://my.picture.com' };
+    statelessAuthInstance = statelessAuth({
+      providers: {
+        login: {
+          findUser: (credentials, callback) => {
+            callback(null, (credentials.id === userInfo.id) ? userInfo: null);
+          },
+          standardiseUserInfo: null
+        }
+      }
+    });
+    sendAuthLoginRequest({ id: userInfo.id, password: 'secret' }).expect(200).end((err, res) => {
+      expect(res.body.user_info).to.deep.equal(userInfo);
+      done();
+    });
+  });
+
+  it('should allow hashPassword to be overridden', (done)=> {
+    let hashed = 'hashed';
+    userInfo = { username: 'xyz', passwordHash: hashed, name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
+    statelessAuthInstance = statelessAuth({
+      providers: {
+        login: {
+          findUser: (credentials, callback) => {
+            callback(null, (credentials.username === userInfo.username) ? userInfo: null);
+          },
+          hashPassword: (clearPassword => hashed)
+        }
+      }
+    });
+    sendAuthLoginRequest({ username: userInfo.username, password: 'secret' }).expect(200).end((err, res) => {
+      verifyResponse(res);
+      done();
+    });
+  });
+
+  it('should allow the password credential name to be overridden', (done)=> {
+    statelessAuthInstance = statelessAuth({
+      providers: {
+        login: {
+          findUser: (credentials, callback) => {
+            callback(null, (credentials.username === userInfo.username) ? userInfo: null);
+          },
+          modelmap: {
+            credentials: {
+              password: 'loginPassword'
+            }
+          }
+        }
+      }
+    });
+    sendAuthLoginRequest({ username: userInfo.username, loginPassword: 'secret' }).expect(200).end((err, res) => {
+      verifyResponse(res);
+      done();
+    });
+  });
+
+  it('should allow the passwordHash user info model name to be overridden', (done)=> {
+    userInfo = { username: 'xyz', hashedPassword: hashPassword('secret'), name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
+    statelessAuthInstance = statelessAuth({
+      providers: {
+        login: {
+          findUser: (credentials, callback) => {
+            callback(null, (credentials.username === userInfo.username) ? userInfo: null);
+          },
+          modelmap: {
+            userInfo: {
+              passwordHash: 'hashedPassword'
+            }
+          }
+        }
+      }
+    });
+    sendAuthLoginRequest({ username: userInfo.username, password: 'secret' }).expect(200).end((err, res) => {
+      verifyResponse(res);
+      done();
+    });
   });
 
 });
