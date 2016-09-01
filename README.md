@@ -268,13 +268,13 @@ The default login options are:
   The credentials passed to login.findUser will be whatever is posted on the /auth/login request.
 * login.hashPassword specifies the password hashing function. The default implementation is sha256 formatted as base64. It can be overridden something like this:
 
-      providers: {
-        login: {
-          hashPassword: (clearPassword) => {
-            //TODO: return hashIt(clearPassword);
+        providers: {
+          login: {
+            hashPassword: (clearPassword) => {
+              //TODO: return hashIt(clearPassword);
+            }
           }
         }
-      }
 
 * login.modelmap.credentials.password specifies the name of the property that holds the password as posted on the /auth/login request. Override this if you want to use a name
   other than 'password' such as 'loginPassword' for example.
