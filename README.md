@@ -255,15 +255,15 @@ The default login options are:
   about this. You will likely want to change this to conform with the format of the user info supplied by your login.findUser function.
 * login.findUser MUST be overridden by your application-specific implementation. If you are using mongoose you might code something like this:
 
-    module.exports = require('stateless-auth')({
-      providers: {
-        login: {
-          findUser: (credentials, callback) => {
-            UserModel.findOne({ username: credentials.username }, callback);
+        module.exports = require('stateless-auth')({
+          providers: {
+            login: {
+              findUser: (credentials, callback) => {
+                UserModel.findOne({ username: credentials.username }, callback);
+              }
+            }
           }
-        }
-      }
-    });
+        });
 
   The credentials passed to login.findUser will be whatever is posted on the /auth/login request.
 * login.hashPassword specifies the password hashing function. The default implementation is sha256 formatted as base64. It can be overridden something like this:
