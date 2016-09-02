@@ -5,7 +5,7 @@ const expect = require('chai').expect;
 
 const jwt = require('../lib/jwt');
 
-describe('JSON Web Token (JWT) encoder / decoder', ()=> {
+describe('json web token (JWT) encoder / decoder', ()=> {
 
   let jwtOptions;
 

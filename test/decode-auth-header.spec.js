@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 
 const statelessAuth = require('../lib');
 
-describe('Decode Authorization Header', ()=> {
+describe('decode authorization header', ()=> {
 
   let statelessAuthInstance, req;
 

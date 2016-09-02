@@ -8,7 +8,7 @@ const sinon = require('sinon');
 
 const statelessAuth = require('../lib');
 
-describe('stateless-auth', ()=> {
+describe('secure routes', ()=> {
 
   let statelessAuthInstance;
 

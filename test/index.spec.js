@@ -9,7 +9,7 @@ const sinon = require('sinon');
 
 const statelessAuth = require('../lib');
 
-describe('stateless-auth', ()=> {
+describe('stateless authentication', ()=> {
 
   let expectedError = { error: 'Expected for testing' };
   let stubGetRequest, stubPostRequest, statelessAuthInstance;

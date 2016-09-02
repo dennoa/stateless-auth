@@ -56,6 +56,13 @@ The process is like this:
 
     app.use('/secure', auth.secure());
 
+### Get the swagger docs
+Swagger documentation is made available under /swagger by default. So if the auth module is at /auth, then a request like this:
+
+    GET /auth/swagger 
+
+will retrieve the swagger documentation.
+
 ## All options
 
 ### Get all options 
@@ -95,7 +102,7 @@ The process is like this:
 
     app.use('/secure', auth.secure({ reslocal: 'userInfo' })); //Puts decoded JWT user info into res.locals.userInfo 
 
-### Global options
+## Global options
 Any of the default options can be overridden. See below for an explanation and the default options.
 
 Note: {{provider}} is one of facebook, google, github or linkedin
@@ -115,8 +122,12 @@ Note: {{provider}} is one of facebook, google, github or linkedin
 * proxy should be set to the address of your proxy server if you are running in an environment where access to the OAuth2 provider is via a corporate proxy or something similar.
 * secure.reslocal can be set to the name of a property on "res.locals" where the decoded JWT for the current request should be put. Use this to specify a variable name that will
   be used wherever the auth.secure() middleware is used. Note that the variable name specified here can be overridden by any individual auth.secure() instance as outlined above.
+* swagger.path is the subpath for retrieving the swagger documentation for the various authentication operations. E.g. GET /auth/swagger.
+* swagger.docs is used to override the default swagger documentation. At the very least you will likely want to override the info section, but any other aspects of the
+  documentation including paths and definitions can also be overridden here. Refer to <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md> for details
+  of the swagger specification.
 
-#### Default options
+### Default options
 
     module.exports = require('stateless-auth')({
 
@@ -206,6 +217,24 @@ Note: {{provider}} is one of facebook, google, github or linkedin
 
       secure: {
         reslocal: null
+      },
+
+      swagger: {
+        path: '/swagger',
+        docs: {
+          swagger: '2.0',
+          info: {
+            title: 'Authentication API',
+            description: 'Authentication API',
+            version: '1.0'
+          },
+          basePath: '/auth',
+          consumes: ['application/json'],
+          produces: ['application/json'],
+          tags: [
+            { name: 'authentication', description: 'authentication' }
+          ]
+        }
       }
 
     });
