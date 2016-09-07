@@ -2,18 +2,23 @@
 
 const expect = require('chai').expect;
 
-const loginHandler = require('../../lib/login-handler');
-const hashPassword = require('../../lib/login-handler/hash-password');
+const loginHandler = require('../lib/login-handler');
+const simpleHash = require('../lib/simple-hash');
 
 describe('login-handler', ()=> {
 
   let login, user;
 
   beforeEach(()=> {
-    user = { username: 'bob', passwordHash: hashPassword('secret'), name: 'Bobby', email: 'bobby@home.com', picture: 'http://bobby.avatar.com' };
+    user = { username: 'bob', passwordHash: simpleHash('secret'), name: 'Bobby', email: 'bobby@home.com', picture: 'http://bobby.avatar.com' };
     login = loginHandler({
       findUser: (credentials, cb) => {
         cb(null, (credentials.username === user.username) ? user : null);
+      },
+      hashPassword: simpleHash,
+      modelmap: {
+        credentials: { password: 'password' },
+        userInfo: { passwordHash: 'passwordHash' }
       }
     });
   });
@@ -44,6 +49,11 @@ describe('login-handler', ()=> {
     login = loginHandler({
       findUser: (credentials, cb) => {
         cb(expectedError);
+      },
+      hashPassword: simpleHash,
+      modelmap: {
+        credentials: { password: 'password' },
+        userInfo: { passwordHash: 'passwordHash' }
       }
     });
     login({ username: 'bob', password: 'secret' }, (err, userInfo) => {
@@ -57,6 +67,11 @@ describe('login-handler', ()=> {
     login = loginHandler({
       findUser: (credentials, cb) => {
         cb(null, (credentials.loginEmail === user.username) ? user : null);
+      },
+      hashPassword: simpleHash,
+      modelmap: {
+        credentials: { password: 'password' },
+        userInfo: { passwordHash: 'passwordHash' }
       }
     });
     login({ loginEmail: 'bob@work.com', password: 'secret' }, (err, userInfo) => {
@@ -69,6 +84,11 @@ describe('login-handler', ()=> {
     login = loginHandler({
       findUser: (credentials, cb) => {
         cb(null, (credentials.username === user.email) ? user : null);
+      },
+      hashPassword: simpleHash,
+      modelmap: {
+        credentials: { password: 'password' },
+        userInfo: { passwordHash: 'passwordHash' }
       }
     });
     login({ username: 'bobby@home.com', password: 'secret' }, (err, userInfo) => {
@@ -78,16 +98,16 @@ describe('login-handler', ()=> {
   });
 
   it('should allow the passwordHash property on the userInfo model to be called something else', (done)=>{
-    user = { name: 'Bobby', encodedPassword: hashPassword('secret'), email: 'bobby@home.com', picture: 'http://bobby.avatar.com' };
+    user = { name: 'Bobby', encodedPassword: simpleHash('secret'), email: 'bobby@home.com', picture: 'http://bobby.avatar.com' };
     login = loginHandler({
       modelmap: {
-        userInfo: {
-          passwordHash: 'encodedPassword'
-        }
+        credentials: { password: 'password' },
+        userInfo: { passwordHash: 'encodedPassword' }
       },
       findUser: (credentials, cb) => {
         cb(null, (credentials.email === user.email) ? user : null);
-      }
+      },
+      hashPassword: simpleHash
     });
     login({ email: 'bobby@home.com', password: 'secret' }, (err, userInfo) => {
       expect(userInfo).to.deep.equal(user);
@@ -98,13 +118,13 @@ describe('login-handler', ()=> {
   it('should allow the password property provided with the credentials to be called something else', (done)=>{
     login = loginHandler({
       modelmap: {
-        credentials: {
-          password: 'loginPassword'
-        }
+        credentials: { password: 'loginPassword' },
+        userInfo: { passwordHash: 'passwordHash' }
       },
       findUser: (credentials, cb) => {
         cb(null, (credentials.email === user.email) ? user : null);
-      }
+      },
+      hashPassword: simpleHash
     });
     login({ email: 'bobby@home.com', loginPassword: 'secret' }, (err, userInfo) => {
       expect(userInfo).to.deep.equal(user);

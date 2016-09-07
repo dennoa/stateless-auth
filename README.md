@@ -105,7 +105,7 @@ will retrieve the swagger documentation.
 ## Global options
 Any of the default options can be overridden. See below for an explanation and the default options.
 
-Note: {{provider}} is one of facebook, google, github or linkedin
+Note: {{provider}} is one of facebook, google, github or linkedin. See below for details of default login provider support.
 
 * jwt.secret is used to create a JWT from the user info and to decode the JWT on subsequent requests. Set this to something that only your application knows about.
 * jwt.expiresAfterSecs determines how long it takes for a JWT to expire.
@@ -200,7 +200,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin
         },
 
         login: {
-          handler: defaultLoginHandler,
+          handler: loginHandler,
           standardiseUserInfo: (userInfo)=> {
             return {
               ids: { login: userInfo.username },
@@ -208,6 +208,15 @@ Note: {{provider}} is one of facebook, google, github or linkedin
               name: userInfo.name,
               picture: userInfo.picture
             };
+          },
+          grantType: 'password',
+          findUser: (credentials, callback) => {
+            callback({ error: 'An implemenation for findUser must be provided' });
+          },
+          hashPassword: simpleHash,
+          modelmap: {
+            credentials: { password: 'password' },
+            userInfo: { passwordHash: 'passwordHash' }
           }
         }
 
@@ -246,37 +255,7 @@ be stored). It looks for a password property on the auth/login request and a pas
 At a minimum, a custom findUser function must be provided. The default implementation calls back with an error reminding you to provide an implementation appropriate to your
 application. 
 
-See below for other defaults that you may need also want to override.
-
-The default login options are:
-
-    login: {
-      handler: defaultLoginHandler,
-
-      standardiseUserInfo: (userInfo)=> {
-        return {
-          ids: { login: userInfo.username },
-          email: userInfo.email,
-          name: userInfo.name,
-          picture: userInfo.picture
-        };
-      },
-
-      findUser: (credentials, callback) => {
-        callback({ error: 'An implemenation for findUser must be provided' });
-      },
-
-      hashPassword: hashPassword,
-
-      modelmap: {
-        credentials: {
-          password: 'password'
-        },
-        userInfo: {
-          passwordHash: 'passwordHash'
-        }
-      }      
-    }
+Full default login options are listed with the global options above.
 
 * login.handler specifies the login handler. See the section below on adding another provider if you want to implement your own login handler rather than use the default.
   If you use your own login handler, then the rest of the configuration options are not really relevant.
@@ -304,6 +283,13 @@ The default login options are:
             }
           }
         }
+
+  If you stick with the default implementation, you will likely need to call it from other places - e.g. during user registration or any password update facility where you will
+  need to save a hashed password. You can navigate the options to gain access to the hashPassword function like this:
+
+        const auth = require('./auth'); //Your configured auth module
+
+        let hashPassword = auth.options.providers.login.hashPassword;
 
 * login.modelmap.credentials.password specifies the name of the property that holds the password as posted on the /auth/login request. Override this if you want to use a name
   other than 'password' such as 'loginPassword' for example.

@@ -6,7 +6,7 @@ const supertest = require('supertest');
 const expect = require('chai').expect;
 
 const statelessAuth = require('../lib');
-const hashPassword = require('../lib/login-handler/hash-password');
+const simpleHash = require('../lib/simple-hash');
 
 describe('default login handler', ()=> {
 
@@ -14,7 +14,7 @@ describe('default login handler', ()=> {
   let statelessAuthInstance, userInfo;
 
   beforeEach(()=> {
-    userInfo = { username: 'xyz', passwordHash: hashPassword('secret'), name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
+    userInfo = { username: 'xyz', passwordHash: simpleHash('secret'), name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
     statelessAuthInstance = statelessAuth({
       providers: {
         login: {
@@ -72,7 +72,7 @@ describe('default login handler', ()=> {
   });
 
   it('should allow standardiseUserInfo to be overridden to conform to the application model', (done)=> {
-    userInfo = { id: 'xyz', passwordHash: hashPassword('secret'), name: { first: 'Bob', last: 'Brown' }, email: 'bob.brown@email.com', picture: 'http://my.picture.com' };
+    userInfo = { id: 'xyz', passwordHash: simpleHash('secret'), name: { first: 'Bob', last: 'Brown' }, email: 'bob.brown@email.com', picture: 'http://my.picture.com' };
     statelessAuthInstance = statelessAuth({
       providers: {
         login: {
@@ -130,7 +130,7 @@ describe('default login handler', ()=> {
   });
 
   it('should allow the passwordHash user info model name to be overridden', (done)=> {
-    userInfo = { username: 'xyz', hashedPassword: hashPassword('secret'), name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
+    userInfo = { username: 'xyz', hashedPassword: simpleHash('secret'), name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
     statelessAuthInstance = statelessAuth({
       providers: {
         login: {
