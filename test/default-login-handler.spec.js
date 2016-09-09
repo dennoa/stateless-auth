@@ -18,9 +18,12 @@ describe('default login handler', ()=> {
     statelessAuthInstance = statelessAuth({
       providers: {
         login: {
-          findUser: (credentials, callback) => {
-            callback(null, (credentials.username === userInfo.username) ? userInfo: null);
-          }
+          findUser: (credentials => new Promise((resolve, reject) => {
+            if (credentials.username === userInfo.username) {
+              return resolve(userInfo);
+            }
+            reject();
+          }))
         }
       }
     });
@@ -53,7 +56,8 @@ describe('default login handler', ()=> {
   }
 
   it('should login when the login-handler has been configured with an appropriate findUser function', (done)=> {
-    sendAuthLoginRequest({ username: userInfo.username, password: 'secret' }).expect(200).end((err, res) => {
+    sendAuthLoginRequest({ username: userInfo.username, password: 'secret' }).end((err, res) => {
+      expect(res.statusCode).to.equal(200);
       verifyResponse(res);
       done();
     });
@@ -61,14 +65,18 @@ describe('default login handler', ()=> {
 
   it('should return an error when the login-handler has not been configured with an appropriate findUser function', (done)=> {
     statelessAuthInstance = statelessAuth();
-    sendAuthLoginRequest({ username: userInfo.username, password: 'secret' }).expect(500).end((err, res) => {
+    sendAuthLoginRequest({ username: userInfo.username, password: 'secret' }).end((err, res) => {
+      expect(res.statusCode).to.equal(500);
       expect(!!res.body.error).to.equal(true);
       done();
     });
   });
 
   it('should return an unauthorized response when the login credentials are invalid', (done)=> {
-    sendAuthLoginRequest({ username: userInfo.username, password: 'incorrect' }).expect(401, done);
+    sendAuthLoginRequest({ username: userInfo.username, password: 'incorrect' }).end((err, res) => {
+      expect(res.statusCode).to.equal(401);
+      done();
+    });
   });
 
   it('should allow standardiseUserInfo to be overridden to conform to the application model', (done)=> {
@@ -76,9 +84,12 @@ describe('default login handler', ()=> {
     statelessAuthInstance = statelessAuth({
       providers: {
         login: {
-          findUser: (credentials, callback) => {
-            callback(null, (credentials.id === userInfo.id) ? userInfo: null);
-          },
+          findUser: (credentials => new Promise((resolve, reject) => {
+            if (credentials.id === userInfo.id) {
+              return resolve(userInfo);
+            }
+            reject();
+          })),
           standardiseUserInfo: null
         }
       }
@@ -95,9 +106,12 @@ describe('default login handler', ()=> {
     statelessAuthInstance = statelessAuth({
       providers: {
         login: {
-          findUser: (credentials, callback) => {
-            callback(null, (credentials.username === userInfo.username) ? userInfo: null);
-          },
+          findUser: (credentials => new Promise((resolve, reject) => {
+            if (credentials.username === userInfo.username) {
+              return resolve(userInfo);
+            }
+            reject();
+          })),
           hashPassword: (clearPassword => hashed)
         }
       }
@@ -112,9 +126,12 @@ describe('default login handler', ()=> {
     statelessAuthInstance = statelessAuth({
       providers: {
         login: {
-          findUser: (credentials, callback) => {
-            callback(null, (credentials.username === userInfo.username) ? userInfo: null);
-          },
+          findUser: (credentials => new Promise((resolve, reject) => {
+            if (credentials.username === userInfo.username) {
+              return resolve(userInfo);
+            }
+            reject();
+          })),
           modelmap: {
             credentials: {
               password: 'loginPassword'
@@ -134,9 +151,12 @@ describe('default login handler', ()=> {
     statelessAuthInstance = statelessAuth({
       providers: {
         login: {
-          findUser: (credentials, callback) => {
-            callback(null, (credentials.username === userInfo.username) ? userInfo: null);
-          },
+          findUser: (credentials => new Promise((resolve, reject) => {
+            if (credentials.username === userInfo.username) {
+              return resolve(userInfo);
+            }
+            reject();
+          })),
           modelmap: {
             userInfo: {
               passwordHash: 'hashedPassword'

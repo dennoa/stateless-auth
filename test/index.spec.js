@@ -52,9 +52,7 @@ describe('stateless authentication', ()=> {
           configItNeeds: 'some stuff',
           handler: handlerConfig => {
             myHandlerConfig = handlerConfig;
-            return (tokenParams, cb) => {
-              cb(null, userInfo);
-            };
+            return (tokenParams => new Promise(resolve => resolve(userInfo)));
           }
         }
       }
@@ -173,9 +171,7 @@ describe('stateless authentication', ()=> {
         let myHandlerConfig;
         let myHandler = handlerConfig => {
           myHandlerConfig = handlerConfig;
-          return (tokenParams, cb) => {
-            cb(null, userInfo);
-          };
+          return (tokenParams => new Promise(resolve => resolve(userInfo)));
         };
         let myStandardiseUserInfo = info => {
           info.ids = {};
