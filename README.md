@@ -35,10 +35,10 @@ The process is like this:
           clientSecret: 'MY_FACEBOOK_CLIENT_SECRET' 
         },
         login: {
-          findUser: (credentials, callback) => {
+          findUser: (credentials => {
             //TODO: Lookup user info and callback
-            //e.g. UserModel.findOne({ username: credentials.username }, callback);
-            callback(null, null);
+            //e.g. return UserModel.findOne({ username: credentials.username });
+            Promise.reject();
           }
         }
       }
@@ -210,9 +210,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
             };
           },
           grantType: 'password',
-          findUser: (credentials, callback) => {
-            callback({ error: 'An implemenation for findUser must be provided' });
-          },
+          findUser: (() => new Promise((resolve, reject) => reject({ error: 'An implemenation for findUser must be provided' }))),
           hashPassword: simpleHash,
           modelmap: {
             credentials: { password: 'password' },
@@ -266,9 +264,7 @@ Full default login options are listed with the global options above.
         module.exports = require('stateless-auth')({
           providers: {
             login: {
-              findUser: (credentials, callback) => {
-                UserModel.findOne({ username: credentials.username }, callback);
-              }
+              findUser: (credentials => UserModel.findOne({ username: credentials.username }))
             }
           }
         });
@@ -307,12 +303,12 @@ If you need a different handler implementation for any reason, you can configure
       //options are from the configuration specific to this provider, plus the global proxy config.
       //Whatever you set in the provider options will be passed through except for the reference to this handler function and standardiseUserInfo (if specified).
 
-      return (tokenParams, callback) => {
+      return (tokenParams => {
 
         //Note that tokenParams will contain the entire request body merged with the relevant client_secret and a grant_type of 'authorization_code'
         //Lookup the access token using the tokenParams
         //Lookup the user info using the access token
-        //callback(null, userInfo);
+        //return a Promise.resolve(userInfo) or Promise.reject(err). Promise.reject with an error will return a statusCode 500, with no error will return 401. 
       };
     }
 
