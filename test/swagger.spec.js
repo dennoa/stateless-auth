@@ -17,11 +17,12 @@ describe('swagger documentation', ()=> {
   });
 
   function requestSwaggerDocs() {
+    let docOptions = statelessAuthInstance.options.swagger.docs;
     let app = express();
     app.use(bodyParser.json());
-    app.use('/auth', statelessAuthInstance.routes);
+    app.use(docOptions.basePath, statelessAuthInstance.routes);
     return supertest(app)
-      .get('/auth/swagger')
+      .get(docOptions.basePath + '/swagger')
       .set('Accept', 'application/json')
       .send();
   }
@@ -66,7 +67,7 @@ describe('swagger documentation', ()=> {
     });
   });
 
-  it('should provide definitions for the operations scoped using the basePath', (done)=> {
+  it('should provide definitions for the operations scoped using the basePath and pathPrefix', (done)=> {
     requestSwaggerDocs().expect(200).end((err, res) => {
       ['authorization_code', 'username_password', 'jwt_user'].forEach(name => {
         expect(!!res.body.definitions['auth_' + name]).to.equal(true);
@@ -113,6 +114,47 @@ describe('swagger documentation', ()=> {
       expect(res.body.definitions['my-authentication_email_password']).to.deep.equal(customOptions.swagger.docs.definitions['my-authentication_email_password']);
       done();
     });    
+  });
+
+  it('should allow the swagger tag description to be modified', (done)=> {
+    let customOptions = {
+      swagger: { 
+        docs: {
+          tags: [
+            { name: 'authentication', description: 'Authentication' }
+          ]
+        }
+      }
+    };
+    statelessAuthInstance = statelessAuth(customOptions);    
+    requestSwaggerDocs().expect(200).end((err, res) => {
+      expect(res.body.tags[0]).to.deep.equal(customOptions.swagger.docs.tags[0]);
+      done();
+    });    
+  });
+
+  it('should allow specification of a path prefix to be applied to all paths', (done) => {
+    let customOptions = {
+      swagger: {
+        pathPrefix: '/prefix'
+      }
+    };
+    statelessAuthInstance = statelessAuth(customOptions);
+    requestSwaggerDocs().end((err, res) => {
+      expect(res.statusCode).to.equal(200);
+      _.forEach(statelessAuthInstance.options.providers, (value, provider) => {
+        expect(!!res.body.paths['/prefix/' + provider]).to.equal(true);
+      });
+      done();
+    });    
+  });
+
+  it('should make the swagger docs available to be merged into other swagger docs', (done) => {
+    requestSwaggerDocs().end((err, res) => {
+      expect(res.statusCode).to.equal(200);
+      expect(statelessAuthInstance.swagger).to.deep.equal(res.body);
+    });
+    done();
   });
 
 });

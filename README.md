@@ -61,7 +61,13 @@ Swagger documentation is made available under /swagger by default. So if the aut
 
     GET /auth/swagger 
 
-will retrieve the swagger documentation.
+will retrieve the swagger documentation. If you are looking to merge the auth swagger docs with other swagger documentation then you can get the auth docs something like this:
+
+    const auth = require('./auth'); //Your configured auth module
+
+    _.mergeWith({}, auth.swagger, otherSwaggerDocs, concatArrays); //You will want to concat things like the tags array
+
+You will likely want to make use of the swagger.pathPrefix option in this case. 
 
 ## All options
 
@@ -123,6 +129,8 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
 * secure.reslocal can be set to the name of a property on "res.locals" where the decoded JWT for the current request should be put. Use this to specify a variable name that will
   be used wherever the auth.secure() middleware is used. Note that the variable name specified here can be overridden by any individual auth.secure() instance as outlined above.
 * swagger.path is the subpath for retrieving the swagger documentation for the various authentication operations. E.g. GET /auth/swagger.
+* swagger.pathPrefix will be prepended to each of the provider paths. For example, you could set swagger.docs.basePath to '/' and swagger.pathPrefix to '/auth'. Useful if you
+  want to merge the auth swagger docs into your application swagger docs and the basePath needs to apply to the application docs.
 * swagger.docs is used to override the default swagger documentation. At the very least you will likely want to override the info section, but any other aspects of the
   documentation including paths and definitions can also be overridden here. Refer to <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md> for details
   of the swagger specification.
@@ -228,6 +236,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
 
       swagger: {
         path: '/swagger',
+        pathPrefix: '',
         docs: {
           swagger: '2.0',
           info: {
