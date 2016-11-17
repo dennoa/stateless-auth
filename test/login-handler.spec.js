@@ -18,7 +18,7 @@ describe('login-handler', ()=> {
       })),
       hashPassword: simpleHash,
       modelmap: {
-        credentials: { password: 'password' },
+        credentials: { username: 'username', password: 'password' },
         userInfo: { passwordHash: 'passwordHash' }
       }
     });
@@ -43,13 +43,25 @@ describe('login-handler', ()=> {
     });
   });
 
+  it('should indicate authentication failure when the username is not provided', (done)=> {
+    login({ password: 'secret' }).catch(err => {
+      done();
+    });
+  });
+
+  it('should indicate authentication failure when the password is not provided', (done)=> {
+    login({ username: 'bob' }).catch(err => {
+      done();
+    });
+  });
+
   it('should callback with any errors found when finding the user', (done)=> {
     let expectedError = 'Expected for testing';
     login = loginHandler({
       findUser: (credentials => new Promise((resolve,reject) => reject(expectedError))),
       hashPassword: simpleHash,
       modelmap: {
-        credentials: { password: 'password' },
+        credentials: { username: 'username', password: 'password' },
         userInfo: { passwordHash: 'passwordHash' }
       }
     });
@@ -68,7 +80,7 @@ describe('login-handler', ()=> {
       })),
       hashPassword: simpleHash,
       modelmap: {
-        credentials: { password: 'password' },
+        credentials: { username: 'loginEmail', password: 'password' },
         userInfo: { passwordHash: 'passwordHash' }
       }
     });
@@ -86,7 +98,7 @@ describe('login-handler', ()=> {
       })),
       hashPassword: simpleHash,
       modelmap: {
-        credentials: { password: 'password' },
+        credentials: { username: 'username', password: 'password' },
         userInfo: { passwordHash: 'passwordHash' }
       }
     });
@@ -100,7 +112,7 @@ describe('login-handler', ()=> {
     user = { name: 'Bobby', encodedPassword: simpleHash('secret'), email: 'bobby@home.com', picture: 'http://bobby.avatar.com' };
     login = loginHandler({
       modelmap: {
-        credentials: { password: 'password' },
+        credentials: { username: 'email', password: 'password' },
         userInfo: { passwordHash: 'encodedPassword' }
       },
       findUser: (credentials => new Promise((resolve, reject) => {
@@ -118,7 +130,7 @@ describe('login-handler', ()=> {
   it('should allow the password property provided with the credentials to be called something else', (done)=>{
     login = loginHandler({
       modelmap: {
-        credentials: { password: 'loginPassword' },
+        credentials: { username: 'email', password: 'loginPassword' },
         userInfo: { passwordHash: 'passwordHash' }
       },
       findUser: (credentials => new Promise((resolve, reject) => {

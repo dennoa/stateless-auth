@@ -79,6 +79,20 @@ describe('default login handler', ()=> {
     });
   });
 
+  it('should return an unauthorized response when the login username is not provided', (done)=> {
+    sendAuthLoginRequest({ password: 'incorrect' }).end((err, res) => {
+      expect(res.statusCode).to.equal(401);
+      done();
+    });
+  });
+
+  it('should return an unauthorized response when the login password is not provided', (done)=> {
+    sendAuthLoginRequest({ username: userInfo.username }).end((err, res) => {
+      expect(res.statusCode).to.equal(401);
+      done();
+    });
+  });
+
   it('should allow standardiseUserInfo to be overridden to conform to the application model', (done)=> {
     userInfo = { id: 'xyz', passwordHash: simpleHash('secret'), name: { first: 'Bob', last: 'Brown' }, email: 'bob.brown@email.com', picture: 'http://my.picture.com' };
     statelessAuthInstance = statelessAuth({
@@ -90,11 +104,17 @@ describe('default login handler', ()=> {
             }
             reject();
           })),
-          standardiseUserInfo: null
+          standardiseUserInfo: null,
+          modelmap: {
+            credentials: {
+              username: 'id'
+            }
+          }
         }
       }
     });
     sendAuthLoginRequest({ id: userInfo.id, password: 'secret' }).expect(200).end((err, res) => {
+      expect(res.statusCode).to.equal(200);
       expect(res.body.user_info).to.deep.equal(userInfo);
       done();
     });
