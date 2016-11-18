@@ -221,7 +221,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
           findUser: (() => new Promise((resolve, reject) => reject({ error: 'An implemenation for findUser must be provided' }))),
           hashPassword: simpleHash,
           modelmap: {
-            credentials: { password: 'password' },
+            credentials: { username: 'username', password: 'password' },
             userInfo: { passwordHash: 'passwordHash' }
           }
         }
@@ -257,7 +257,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
 
 ### Default login options
 The default implementation for logging in with a username and password assumes the application holds a hash of the password as part of the user info (no actual password should
-be stored). It looks for a password property on the auth/login request and a passwordHash property on the user info model. (These names can be overridden).
+be stored). It looks for username and password properties on the auth/login request and a passwordHash property on the user info model. (These names can be overridden).
 
 At a minimum, a custom findUser function must be provided. The default implementation calls back with an error reminding you to provide an implementation appropriate to your
 application. 
