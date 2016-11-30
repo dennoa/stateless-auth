@@ -16,7 +16,7 @@ describe('secure routes', ()=> {
     statelessAuthInstance = statelessAuth();
   });
 
-  function sendRequestToBeVerified(path, token) {
+  function sendRequestToBeVerified(path, token, scheme='Bearer') {
     let app = express();
     app.use(bodyParser.json());
     app.use(path, statelessAuthInstance.secure(), (req, res)=> { res.status(200).json({ success: true }); });
@@ -24,7 +24,7 @@ describe('secure routes', ()=> {
       .post(path)
       .set('Accept', 'application/json');
     if (token) {
-      req.set('Authorization', 'Bearer ' + token);
+      req.set('Authorization', scheme + ' ' + token);
     }
     return req.send();
   }
@@ -42,6 +42,39 @@ describe('secure routes', ()=> {
   it('should allow access to secure paths where a valid authentication header has been provided', (done)=> {
     let token = statelessAuthInstance.jwt.encode({ userId: 'user_id', name: 'Bob' });
     sendRequestToBeVerified('/secure', token).expect(200, done);
+  });
+
+  it('should deny basic-auth access to secure paths where basic-auth is not permitted (default setting)', (done)=> {
+    let token = new Buffer('bob:secret').toString('base64');
+    sendRequestToBeVerified('/secure', token, 'Basic').expect(401, done);
+  });
+
+  it('should allow basic-auth access to secure paths where basic-auth is permitted', (done)=> {
+    statelessAuthInstance = statelessAuth({ secure: { basicAuth: true }, providers: { login: {
+      findUser: () => {
+        return Promise.resolve({ name: 'Bob', passwordHash: 'secret' });
+      },
+      hashPassword: text => text
+    }}});
+    let token = new Buffer('bob:secret').toString('base64');
+    sendRequestToBeVerified('/secure', token, 'Basic').expect(200, done);
+  });
+
+  it('should place user login details on res.local for basic-auth access when specified in global options', (done)=> {
+    statelessAuthInstance = statelessAuth({ secure: { basicAuth: true, reslocal: 'basicUserInfo' }, providers: { login: {
+      findUser: () => {
+        return Promise.resolve({ name: 'Bob', passwordHash: 'secret' });
+      },
+      hashPassword: text => text
+    }}});
+    let token = new Buffer('bob:secret').toString('base64');
+    let app = express();
+    app.use(bodyParser.json());
+    app.use('/secure-basic', statelessAuthInstance.secure(), (req, res)=> { 
+      expect(res.locals.basicUserInfo.name).to.equal('Bob');
+      res.status(200).json({ success: true }); 
+    });
+    supertest(app).post('/secure-basic').set('Accept', 'application/json').set('Authorization', 'Basic ' + token).send().expect(200, done);
   });
 
   it('should place valid user info on res.local when specified in the global options', (done)=> {

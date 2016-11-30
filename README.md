@@ -108,6 +108,13 @@ You will likely want to make use of the swagger.pathPrefix option in this case.
 
     app.use('/secure', auth.secure({ reslocal: 'userInfo' })); //Puts decoded JWT user info into res.locals.userInfo 
 
+### Support basic authentication access in addition to JWT
+Basic authentication uses the login provider to retrieve user details and validate credentials. It cannot be used without a login provider implementation.
+
+    const auth = require('./auth'); //Your configured auth module
+
+    app.use('/secure', auth.secure({ basicAuth: true })); 
+
 ## Global options
 Any of the default options can be overridden. See below for an explanation and the default options.
 
@@ -128,6 +135,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
 * proxy should be set to the address of your proxy server if you are running in an environment where access to the OAuth2 provider is via a corporate proxy or something similar.
 * secure.reslocal can be set to the name of a property on "res.locals" where the decoded JWT for the current request should be put. Use this to specify a variable name that will
   be used wherever the auth.secure() middleware is used. Note that the variable name specified here can be overridden by any individual auth.secure() instance as outlined above.
+* secure.basicAuth can be set to true to allow any valid basic authentication request to gain access to the secured path.
 * swagger.path is the subpath for retrieving the swagger documentation for the various authentication operations. E.g. GET /auth/swagger.
 * swagger.pathPrefix will be prepended to each of the provider paths. For example, you could set swagger.docs.basePath to '/' and swagger.pathPrefix to '/auth'. Useful if you
   want to merge the auth swagger docs into your application swagger docs and the basePath needs to apply to the application docs.
@@ -231,7 +239,8 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
       proxy: null,
 
       secure: {
-        reslocal: null
+        reslocal: null,
+        basicAuth: false
       },
 
       swagger: {
