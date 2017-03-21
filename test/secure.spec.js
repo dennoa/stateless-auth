@@ -54,7 +54,7 @@ describe('secure routes', ()=> {
       findUser: () => {
         return Promise.resolve({ name: 'Bob', passwordHash: 'secret' });
       },
-      hashPassword: text => text
+      comparePassword: (password, hash) => Promise.resolve(hash === password)
     }}});
     let token = new Buffer('bob:secret').toString('base64');
     sendRequestToBeVerified('/secure', token, 'Basic').expect(200, done);
@@ -65,7 +65,7 @@ describe('secure routes', ()=> {
       findUser: () => {
         return Promise.resolve({ name: 'Bob', passwordHash: 'secret' });
       },
-      hashPassword: text => text
+      comparePassword: (password, hash) => Promise.resolve(hash === password)
     }}});
     let token = new Buffer('bob:secret').toString('base64');
     let app = express();

@@ -4,6 +4,7 @@ const expect = require('chai').expect;
 
 const loginHandler = require('../lib/login-handler');
 const simpleHash = require('../lib/simple-hash');
+const simpleCompare = (password, passwordHash) => Promise.resolve(simpleHash(password) === passwordHash);
 
 describe('login-handler', ()=> {
 
@@ -16,7 +17,7 @@ describe('login-handler', ()=> {
         if (credentials.username === user.username) { return resolve(user); }
         reject();
       })),
-      hashPassword: simpleHash,
+      comparePassword: simpleCompare,
       modelmap: {
         credentials: { username: 'username', password: 'password' },
         userInfo: { passwordHash: 'passwordHash' }
@@ -59,7 +60,7 @@ describe('login-handler', ()=> {
     let expectedError = 'Expected for testing';
     login = loginHandler({
       findUser: (credentials => new Promise((resolve,reject) => reject(expectedError))),
-      hashPassword: simpleHash,
+      comparePassword: simpleCompare,
       modelmap: {
         credentials: { username: 'username', password: 'password' },
         userInfo: { passwordHash: 'passwordHash' }
@@ -78,7 +79,7 @@ describe('login-handler', ()=> {
         if (credentials.loginEmail === user.username) { return resolve(user); }
         reject();
       })),
-      hashPassword: simpleHash,
+      comparePassword: simpleCompare,
       modelmap: {
         credentials: { username: 'loginEmail', password: 'password' },
         userInfo: { passwordHash: 'passwordHash' }
@@ -96,7 +97,7 @@ describe('login-handler', ()=> {
         if (credentials.username === user.email) { return resolve(user); }
         reject();
       })),
-      hashPassword: simpleHash,
+      comparePassword: simpleCompare,
       modelmap: {
         credentials: { username: 'username', password: 'password' },
         userInfo: { passwordHash: 'passwordHash' }
@@ -119,7 +120,7 @@ describe('login-handler', ()=> {
         if (credentials.email === user.email) { return resolve(user); }
         reject();
       })),
-      hashPassword: simpleHash
+      comparePassword: simpleCompare,
     });
     login({ email: 'bobby@home.com', password: 'secret' }).then(userInfo => {
       expect(userInfo).to.deep.equal(user);
@@ -137,7 +138,7 @@ describe('login-handler', ()=> {
         if (credentials.email === user.email) { return resolve(user); }
         reject();
       })),
-      hashPassword: simpleHash
+      comparePassword: simpleCompare,
     });
     login({ email: 'bobby@home.com', loginPassword: 'secret' }).then(userInfo => {
       expect(userInfo).to.deep.equal(user);

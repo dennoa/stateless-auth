@@ -228,6 +228,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
           grantType: 'password',
           findUser: (() => new Promise((resolve, reject) => reject({ error: 'An implemenation for findUser must be provided' }))),
           hashPassword: simpleHash,
+          comparePassword: (password, passwordHash) => Promise.resolve(simpleHash(password) === passwordHash),
           modelmap: {
             credentials: { username: 'username', password: 'password' },
             userInfo: { passwordHash: 'passwordHash' }
@@ -288,22 +289,21 @@ Full default login options are listed with the global options above.
         });
 
   The credentials passed to login.findUser will be whatever is posted on the /auth/login request.
-* login.hashPassword specifies the password hashing function. The default implementation is sha256 formatted as base64. It can be overridden something like this:
-
-        providers: {
-          login: {
-            hashPassword: (clearPassword) => {
-              //TODO: return hashIt(clearPassword);
-            }
-          }
-        }
-
-  If you stick with the default implementation, you will likely need to call it from other places - e.g. during user registration or any password update facility where you will
-  need to save a hashed password. You can navigate the options to gain access to the hashPassword function like this:
+* login.hashPassword is no longer used but has been retained for backward compatibility. The default implementation is sha256 formatted as base64. If you call this function from other places - e.g. during user registration or any password update facility where you will need to save a hashed password - then you can navigate the options to gain access to the hashPassword function like this:
 
         const auth = require('./auth'); //Your configured auth module
 
         let hashPassword = auth.options.providers.login.hashPassword;
+
+* login.comparePassword is used to compare a password with a hash. It returns a Promise that resolves to a truthy or falsy value depending on whether or not the password matches the hash. The default implementation hashes the password with sha256 formatted as base64 and compares the result to the provided hash. You can override this function something like this:
+
+        module.exports = require('stateless-auth')({
+          providers: {
+            login: {
+              comparePassword: (password, passwordHash) => Promise.resolve(hashIt(password) === passwordHash)
+            }
+          }
+        });
 
 * login.modelmap.credentials.password specifies the name of the property that holds the password as posted on the /auth/login request. Override this if you want to use a name
   other than 'password' such as 'loginPassword' for example.

@@ -120,7 +120,7 @@ describe('default login handler', ()=> {
     });
   });
 
-  it('should allow hashPassword to be overridden', (done)=> {
+  it('should allow comparePassword to be overridden', (done)=> {
     let hashed = 'hashed';
     userInfo = { username: 'xyz', passwordHash: hashed, name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
     statelessAuthInstance = statelessAuth({
@@ -132,12 +132,33 @@ describe('default login handler', ()=> {
             }
             reject();
           })),
-          hashPassword: (clearPassword => hashed)
+          comparePassword: (password, hash) => Promise.resolve(hash === hashed)
         }
       }
     });
     sendAuthLoginRequest({ username: userInfo.username, password: 'secret' }).expect(200).end((err, res) => {
       verifyResponse(res);
+      done();
+    });
+  });
+
+  it('should return an unauthorized response when the overridden comparePassword function returns false', (done)=> {
+    userInfo = { username: 'xyz', passwordHash: 'hashed', name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
+    statelessAuthInstance = statelessAuth({
+      providers: {
+        login: {
+          findUser: (credentials => new Promise((resolve, reject) => {
+            if (credentials.username === userInfo.username) {
+              return resolve(userInfo);
+            }
+            reject();
+          })),
+          comparePassword: (password, hash) => Promise.resolve(false)
+        }
+      }
+    });
+    sendAuthLoginRequest({ username: userInfo.username, password: 'incorrect' }).end((err, res) => {
+      expect(res.statusCode).to.equal(401);
       done();
     });
   });
