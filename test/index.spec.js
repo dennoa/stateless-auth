@@ -43,7 +43,7 @@ describe('stateless authentication', ()=> {
     expect(statelessAuthInstance.options.jwt.secret).to.equal(customOptions.jwt.secret);
   });
 
-  it('should allow other authentication providers to be included', (done)=> {
+  it('should allow other authentication providers to be included', done => {
     let userInfo = { ids: { myFavourite: 'xyz' }, name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
     let myHandlerConfig;
     let customOptions = {
@@ -96,7 +96,7 @@ describe('stateless authentication', ()=> {
         return (provider.qsOrForm === 'qs') ? stubGetRequest.secondCall.args : stubGetRequest.firstCall.args;
       }
 
-      it('should use the token params to lookup the token from ' + provider.name, (done)=> {
+      it('should use the token params to lookup the token from ' + provider.name, done => {
         onTokenRequest.yields(expectedError);
         let tokenParams = { code: 'some code from ' + provider.name, client_id: 'some client id for ' + provider.name, redirect_uri: 'https://' + provider.name + '.redirect.uri.com' };
         sendAuthRequest(provider.name, tokenParams).expect(500, expectedError, ()=> {
@@ -113,12 +113,12 @@ describe('stateless authentication', ()=> {
         });
       });
 
-      it('should callback with any token errors from ' + provider.name, (done)=> {
+      it('should callback with any token errors from ' + provider.name, done => {
         onTokenRequest.yields(null, null, expectedError);
         sendAuthRequest(provider.name, {}).expect(500, expectedError, done);
       });
 
-      it('should use the ' + provider.name + ' token to lookup user information', (done)=> {
+      it('should use the ' + provider.name + ' token to lookup user information', done => {
         let tokenResponse = { access_token: 'my ' + provider.name + ' token' };
         onTokenRequest.yields(null, null, tokenResponse);
         onUserInfoRequest.yields(expectedError);
@@ -137,13 +137,13 @@ describe('stateless authentication', ()=> {
         });
       });
 
-      it('should callback with any user info lookup errors from ' + provider.name, (done)=> {
+      it('should callback with any user info lookup errors from ' + provider.name, done => {
         onTokenRequest.yields(null, null, { token: 'token' });
         onUserInfoRequest.yields(expectedError);
         sendAuthRequest(provider.name, {}).expect(500, expectedError, done);
       });
 
-      it('should allow the default configuration for ' + provider.name + ' to be overridden', (done)=> {
+      it('should allow the default configuration for ' + provider.name + ' to be overridden', done => {
         let customOptions = {
           jwt: { secret: 'my own personal secret' },
           proxy: 'http://my-proxy.com',
@@ -166,7 +166,7 @@ describe('stateless authentication', ()=> {
         });
       });
 
-      it('should allow the default handler for ' + provider.name + ' to be overridden', (done)=> {
+      it('should allow the default handler for ' + provider.name + ' to be overridden', done => {
         let userInfo = { key: 1234, name: 'some name', email: 'some@email.com', picture: 'http://some.picture.com' };
         let myHandlerConfig;
         let myHandler = handlerConfig => {
@@ -191,6 +191,41 @@ describe('stateless authentication', ()=> {
         });
       });
 
+      it('should allow the standardiseUserInfo function for ' + provider.name + ' to return a Promise', done => {
+        const customOptions = { providers: {} };
+        const myStandardiseUserInfo = info => new Promise(resolve => {
+          info.ids = {};
+          info.ids[provider.name] = 'some id';
+          process.nextTick(() => resolve(info));
+        });
+        customOptions.providers[provider.name] = { standardiseUserInfo: myStandardiseUserInfo };
+        statelessAuthInstance = statelessAuth(customOptions);
+        onTokenRequest.yields(null, null, { access_token: 'token' });
+        onUserInfoRequest.yields(null, null, provider.userInfo);
+        sendAuthRequest(provider.name, {}).expect(200).end((err, res) => {
+          expect(res.body.user_info.ids[provider.name]).to.equal('some id');
+          done();
+        });
+      });
+
+      it('should pass the request body to the standardiseUserInfo function for ' + provider.name, done => {
+        const customOptions = { providers: {} };
+        let providedReqBody;
+        const myStandardiseUserInfo = (info, reqBody) => {
+          providedReqBody = reqBody;
+          return {};
+        };
+        customOptions.providers[provider.name] = { standardiseUserInfo: myStandardiseUserInfo };
+        statelessAuthInstance = statelessAuth(customOptions);
+        onTokenRequest.yields(null, null, { access_token: 'token' });
+        onUserInfoRequest.yields(null, null, provider.userInfo);
+        const data = { custom: 'data', code: 'code' };
+        sendAuthRequest(provider.name, data).expect(200).end((err, res) => {
+          expect(providedReqBody).to.deep.equal(data);
+          done();
+        });
+      });
+
       describe('when responding successfully from ' + provider.name, ()=> {
 
         beforeEach(()=> {
@@ -206,14 +241,14 @@ describe('stateless authentication', ()=> {
           expect(userInfo.picture).to.equal(expected.picture);
         }
 
-        it('should return user info from ' + provider.name + ' as a JWT', (done)=> {
+        it('should return user info from ' + provider.name + ' as a JWT', done => {
           sendAuthRequest(provider.name, {}).expect(200).end((err, res) => {
             verifyuserInfo(statelessAuthInstance.jwt.decode(res.body.token));
             done();
           });
         });
 
-        it('should return user info from ' + provider.name + ' in clear text', (done)=> {
+        it('should return user info from ' + provider.name + ' in clear text', done => {
           sendAuthRequest(provider.name, {}).expect(200).end((err, res) => {
             verifyuserInfo(res.body.user_info);
             done();

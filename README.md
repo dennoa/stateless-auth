@@ -126,7 +126,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
 * providers.{{provider}}.userInfoEndpoint is the endpoint for the user info request.
 * providers.{{provider}}.clientSecret is the client secret configured at the provider end. Set this to the relevant value from your provider application.
 * providers.{{provider}}.standardiseUserInfo is the function used to transform user information from the provider into a standard format for your application.
-  This function is passed user information returned by the provider and returns user information in the format appropriate to your application.
+  This function is passed user information returned by the provider (1st arg) as well as the request body (2nd arg). It returns user information in the format appropriate to your application.
 * providers.{{provider}}.tokenEndpointRequiresFormPost is used by the default mechanism for retrieving the access token. If truthy, data sent to the provider will
   be as a form on a POST request. If falsy, data will be sent as a querystring on a GET request.
 * providers.{{provider}}.userInfoEndpointAuthorizationHeader is used by the default mechanism for retrieving user information. If specified, the value will be used to
@@ -146,7 +146,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
 ### Default options
 
     module.exports = require('stateless-auth')({
-
+  
       jwt: {
         secret: 'JWT_SECRET',
         expiresAfterSecs: 12*60*60
@@ -158,28 +158,24 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
           tokenEndpoint: 'https://graph.facebook.com/v2.5/oauth/access_token',
           userInfoEndpoint: 'https://graph.facebook.com/v2.5/me?fields=id,email,first_name,last_name,link,name',
           clientSecret: 'CLIENT_SECRET',
-          standardiseUserInfo: (userInfo)=> {
-            return {
-              ids: { facebook: userInfo.id },
-              email: userInfo.email,
-              name: userInfo.name,
-              picture: 'https://graph.facebook.com/v2.5/' + userInfo.id + '/picture?type=large'
-            };
-          }
+          standardiseUserInfo: userInfo => ({
+            ids: { facebook: userInfo.id },
+            email: userInfo.email,
+            name: userInfo.name,
+            picture: `https://graph.facebook.com/v2.5/${userInfo.id}/picture?type=large`
+          })
         },
 
         github: {
           tokenEndpoint: 'https://github.com/login/oauth/access_token',
           userInfoEndpoint: 'https://api.github.com/user',
           clientSecret: 'CLIENT_SECRET',
-          standardiseUserInfo: (userInfo)=> {
-            return {
-              ids: { github: userInfo.id },
-              email: userInfo.email,
-              name: userInfo.name,
-              picture: userInfo.avatar_url
-            };
-          },
+          standardiseUserInfo: userInfo => ({
+            ids: { github: userInfo.id },
+            email: userInfo.email,
+            name: userInfo.name,
+            picture: userInfo.avatar_url
+          }),
           userInfoEndpointAuthorizationHeader: 'token'
         },
 
@@ -187,14 +183,12 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
           tokenEndpoint: 'https://www.googleapis.com/oauth2/v4/token',
           userInfoEndpoint: 'https://www.googleapis.com/oauth2/v3/userinfo',
           clientSecret: 'CLIENT_SECRET',      
-          standardiseUserInfo: (userInfo)=> {
-            return {
-              ids: { google: userInfo.sub },
-              email: userInfo.email,
-              name: userInfo.name,
-              picture: userInfo.picture
-            };
-          },
+          standardiseUserInfo: userInfo => ({
+            ids: { google: userInfo.sub },
+            email: userInfo.email,
+            name: userInfo.name,
+            picture: userInfo.picture
+          }),
           tokenEndpointRequiresFormPost: true,
           userInfoEndpointAuthorizationHeader: 'Bearer'
         },
@@ -203,30 +197,26 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
           tokenEndpoint: 'https://www.linkedin.com/uas/oauth2/accessToken',
           userInfoEndpoint: 'https://api.linkedin.com/v1/people/~:(id,first-name,last-name,email-address,picture-url)?format=json',
           clientSecret: 'CLIENT_SECRET',      
-          standardiseUserInfo: (userInfo)=> {
-            return {
-              ids: { linkedin: userInfo.id },
-              email: userInfo.emailAddress,
-              name: userInfo.firstName + ' ' + userInfo.lastName,
-              picture: userInfo.pictureUrl
-            };
-          },
+          standardiseUserInfo: userInfo => ({
+            ids: { linkedin: userInfo.id },
+            email: userInfo.emailAddress,
+            name: userInfo.firstName + ' ' + userInfo.lastName,
+            picture: userInfo.pictureUrl
+          }),
           tokenEndpointRequiresFormPost: true,
           userInfoEndpointAuthorizationHeader: 'Bearer'
         },
 
         login: {
           handler: loginHandler,
-          standardiseUserInfo: (userInfo)=> {
-            return {
-              ids: { login: userInfo.username },
-              email: userInfo.email,
-              name: userInfo.name,
-              picture: userInfo.picture
-            };
-          },
+          standardiseUserInfo: userInfo => ({
+            ids: { login: userInfo.username },
+            email: userInfo.email,
+            name: userInfo.name,
+            picture: userInfo.picture
+          }),
           grantType: 'password',
-          findUser: (() => new Promise((resolve, reject) => reject({ error: 'An implemenation for findUser must be provided' }))),
+          findUser: () => Promise.reject({ error: 'An implemenation for findUser must be provided' }),
           hashPassword: simpleHash,
           comparePassword: (password, passwordHash) => Promise.resolve(simpleHash(password) === passwordHash),
           modelmap: {
@@ -293,7 +283,7 @@ Full default login options are listed with the global options above.
 
         const auth = require('./auth'); //Your configured auth module
 
-        let hashPassword = auth.options.providers.login.hashPassword;
+        const hashPassword = auth.options.providers.login.hashPassword;
 
 * login.comparePassword is used to compare a password with a hash. It returns a Promise that resolves to a truthy or falsy value depending on whether or not the password matches the hash. The default implementation hashes the password with sha256 formatted as base64 and compares the result to the provided hash. You can override this function something like this:
 
