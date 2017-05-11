@@ -122,11 +122,14 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
 
 * jwt.secret is used to create a JWT from the user info and to decode the JWT on subsequent requests. Set this to something that only your application knows about.
 * jwt.expiresAfterSecs determines how long it takes for a JWT to expire.
+* jwtCookie.isEnabled determines whether or not authentication is supported via a cookie in addition to the normal Authorization header.
+* jwtCookie.name is the name of the cookie that contains the jwt.
 * providers.{{provider}}.tokenEndpoint is the endpoint for the token request.
 * providers.{{provider}}.userInfoEndpoint is the endpoint for the user info request.
 * providers.{{provider}}.clientSecret is the client secret configured at the provider end. Set this to the relevant value from your provider application.
 * providers.{{provider}}.standardiseUserInfo is the function used to transform user information from the provider into a standard format for your application.
   This function is passed user information returned by the provider (1st arg) as well as the request body (2nd arg). It returns user information in the format appropriate to your application.
+* providers.{{provider}}.standardiseUserInfoForCookie overrides standardiseUserInfo when deternmining the details for the cookie jwt. If not specified, the standardiseUserInfo function will be used.
 * providers.{{provider}}.tokenEndpointRequiresFormPost is used by the default mechanism for retrieving the access token. If truthy, data sent to the provider will
   be as a form on a POST request. If falsy, data will be sent as a querystring on a GET request.
 * providers.{{provider}}.userInfoEndpointAuthorizationHeader is used by the default mechanism for retrieving user information. If specified, the value will be used to
@@ -152,6 +155,11 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
         expiresAfterSecs: 12*60*60
       },
 
+      jwtCookie: {
+        isEnabled: false,
+        name: 'jwt'
+      },
+
       providers: {
 
         facebook: {
@@ -163,7 +171,8 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
             email: userInfo.email,
             name: userInfo.name,
             picture: `https://graph.facebook.com/v2.5/${userInfo.id}/picture?type=large`
-          })
+          }),
+          standardiseUserInfoForCookie: null,
         },
 
         github: {
@@ -176,6 +185,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
             name: userInfo.name,
             picture: userInfo.avatar_url
           }),
+          standardiseUserInfoForCookie: null,
           userInfoEndpointAuthorizationHeader: 'token'
         },
 
@@ -189,6 +199,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
             name: userInfo.name,
             picture: userInfo.picture
           }),
+          standardiseUserInfoForCookie: null,
           tokenEndpointRequiresFormPost: true,
           userInfoEndpointAuthorizationHeader: 'Bearer'
         },
@@ -203,6 +214,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
             name: userInfo.firstName + ' ' + userInfo.lastName,
             picture: userInfo.pictureUrl
           }),
+          standardiseUserInfoForCookie: null,
           tokenEndpointRequiresFormPost: true,
           userInfoEndpointAuthorizationHeader: 'Bearer'
         },
@@ -215,8 +227,9 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
             name: userInfo.name,
             picture: userInfo.picture
           }),
+          standardiseUserInfoForCookie: null,
           grantType: 'password',
-          findUser: () => Promise.reject({ error: 'An implemenation for findUser must be provided' }),
+          findUser: () => Promise.reject({ error: 'An implementation for findUser must be provided' }),
           hashPassword: simpleHash,
           comparePassword: (password, passwordHash) => Promise.resolve(simpleHash(password) === passwordHash),
           modelmap: {
