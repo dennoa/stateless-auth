@@ -75,20 +75,20 @@ You will likely want to make use of the swagger.pathPrefix option in this case.
 
     const auth = require('./auth'); //Your configured auth module
 
-    let authOptions = auth.options;
+    const authOptions = auth.options;
 
 ### Get user information from the JWT on the request
 
     const auth = require('./auth'); //Your configured auth module
 
-    let userInfo = auth.decodeAuthHeader(req);
+    const userInfo = auth.decodeAuthHeader(req);
 
 ### Get the JWT encode / decode functions that use the configured secret key
 
     const auth = require('./auth'); //Your configured auth module
 
-    let token = auth.jwt.encode({ some: 'data', tobe: 'encoded' });
-    let data = auth.jwt.decode(token);
+    const token = auth.jwt.encode({ some: 'data', tobe: 'encoded' });
+    const data = auth.jwt.decode(token);
 
 ### Route authentication requests
 
@@ -342,3 +342,15 @@ If you need a different handler implementation for any reason, you can configure
       }
     });
     
+## Available from your stateless-auth instance
+
+    const auth = require('./auth'); // Your configured auth module
+
+    auth.options; // Reference the configuration options used by this auth instance
+    auth.decodeAuthHeader; // Function to decode the authorization header
+    auth.jwt; // jwt instance for jwt.encode and jwt.decode functions
+    auth.routes; // Routes for express
+    auth.routeHandlers; // Middleware handlers for each of the routes, e.g. routeHandlers.facebook, routeHandlers.login, etc.
+    auth.secure; // Middleware for securing routes
+    auth.swagger; // The swagger docs describing the stateless auth operations
+

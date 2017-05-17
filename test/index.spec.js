@@ -260,4 +260,10 @@ describe('stateless authentication', ()=> {
 
   });
 
+  it('should expose route handlers so they can be used in other contexts', () => {
+    ['facebook', 'google', 'github', 'linkedin', 'login'].forEach(handler => {
+      expect(typeof statelessAuthInstance.routeHandlers[handler]).to.equal('function');
+    });
+  });
+
 });
