@@ -16,12 +16,12 @@ describe('decode authorization header', ()=> {
   });
 
   it('should decode the jwt from the request Authorization Header', ()=> {
-    let userInfo = { ids: { facebook: '214', github: '3432' }, name: 'Johnny', email: 'johnny@home.com',  picture: 'http://johnny.pics.com' };
-    let token = statelessAuthInstance.jwt.encode(userInfo);
+    const userInfo = { ids: { facebook: '214', github: '3432' }, name: 'Johnny', email: 'johnny@home.com',  picture: 'http://johnny.pics.com' };
+    const token = statelessAuthInstance.jwt.encode(userInfo);
     req.get = key => {
       return (key === 'Authorization') ? 'Bearer ' + token : null;
     };
-    let decoded = statelessAuthInstance.decodeAuthHeader(req);
+    const decoded = statelessAuthInstance.decodeAuthHeader(req);
     expect(decoded.ids.facebook).to.equal(userInfo.ids.facebook);
     expect(decoded.ids.github).to.equal(userInfo.ids.github);
     expect(decoded.name).to.equal(userInfo.name);
@@ -30,11 +30,11 @@ describe('decode authorization header', ()=> {
   });
 
   it('should decode a basic authentication request Authorization Header', ()=> {
-    let creds = Buffer.from('username:password').toString('base64');
+    const creds = Buffer.from('username:password').toString('base64');
     req.get = key => {
       return (key === 'Authorization') ? 'Basic ' + creds : null;
     };
-    let decoded = statelessAuthInstance.decodeAuthHeader(req, { basicAuth: true });
+    const decoded = statelessAuthInstance.decodeAuthHeader(req, { basicAuth: true });
     expect(decoded.username).to.equal('username');
     expect(decoded.password).to.equal('password');
   });
@@ -43,7 +43,7 @@ describe('decode authorization header', ()=> {
     req.get = key => {
       return (key === 'Authorization') ? 'Basic ' + Buffer.from('username:password').toString('base64') : null;
     };
-    let decoded = statelessAuthInstance.decodeAuthHeader(req, { basicAuth: false });
+    const decoded = statelessAuthInstance.decodeAuthHeader(req, { basicAuth: false });
     expect(typeof decoded).to.equal('undefined');
   });
 
@@ -51,7 +51,7 @@ describe('decode authorization header', ()=> {
     req.get = key => {
       return (key === 'Authorization') ? 'Basic ' + Buffer.from('username:password').toString('base64') : null;
     };
-    let decoded = statelessAuthInstance.decodeAuthHeader(req);
+    const decoded = statelessAuthInstance.decodeAuthHeader(req);
     expect(typeof decoded).to.equal('undefined');
   });
 
@@ -59,7 +59,7 @@ describe('decode authorization header', ()=> {
     req.get = key => {
       return (key === 'Authorization') ? 'Basic' : null;
     };
-    let decoded = statelessAuthInstance.decodeAuthHeader(req, { basicAuth: true });
+    const decoded = statelessAuthInstance.decodeAuthHeader(req, { basicAuth: true });
     expect(typeof decoded).to.equal('undefined');
   });
 

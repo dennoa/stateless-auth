@@ -17,8 +17,8 @@ describe('swagger documentation', ()=> {
   });
 
   function requestSwaggerDocs() {
-    let docOptions = statelessAuthInstance.options.swagger.docs;
-    let app = express();
+    const docOptions = statelessAuthInstance.options.swagger.docs;
+    const app = express();
     app.use(bodyParser.json());
     app.use(docOptions.basePath, statelessAuthInstance.routes);
     return supertest(app)
@@ -38,7 +38,7 @@ describe('swagger documentation', ()=> {
   });
 
   it('should allow the swagger document information to be modified', (done)=> {
-    let customOptions = {
+    const customOptions = {
       swagger: { 
         docs: {
           info: {
@@ -77,7 +77,7 @@ describe('swagger documentation', ()=> {
   });
 
   it('should allow the swagger paths and definitions to be modified', (done)=> {
-    let customOptions = {
+    const customOptions = {
       swagger: { 
         docs: {
           basePath: '/my-authentication',
@@ -117,7 +117,7 @@ describe('swagger documentation', ()=> {
   });
 
   it('should allow the swagger tag description to be modified', (done)=> {
-    let customOptions = {
+    const customOptions = {
       swagger: { 
         docs: {
           tags: [
@@ -134,7 +134,7 @@ describe('swagger documentation', ()=> {
   });
 
   it('should allow specification of a path prefix to be applied to all paths', (done) => {
-    let customOptions = {
+    const customOptions = {
       swagger: {
         pathPrefix: '/prefix'
       }

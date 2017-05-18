@@ -10,7 +10,7 @@ const simpleHash = require('../lib/simple-hash');
 
 describe('default login handler', ()=> {
 
-  let expectedError = { error: 'Expected for testing' };
+  const expectedError = { error: 'Expected for testing' };
   let statelessAuthInstance, userInfo;
 
   beforeEach(()=> {
@@ -30,7 +30,7 @@ describe('default login handler', ()=> {
   });
 
   function sendAuthLoginRequest(data) {
-    let app = express();
+    const app = express();
     app.use(bodyParser.json());
     app.use('/auth', statelessAuthInstance.routes);
     return supertest(app)
@@ -40,7 +40,7 @@ describe('default login handler', ()=> {
   }
 
   function verifyJWT(res) {
-    let decoded = statelessAuthInstance.jwt.decode(res.body.token);
+    const decoded = statelessAuthInstance.jwt.decode(res.body.token);
     expect(res.body.user_info.ids.login).to.equal(decoded.ids.login);
     expect(res.body.user_info.email).to.equal(decoded.email);
     expect(res.body.user_info.name).to.equal(decoded.name);
@@ -121,7 +121,7 @@ describe('default login handler', ()=> {
   });
 
   it('should allow comparePassword to be overridden', (done)=> {
-    let hashed = 'hashed';
+    const hashed = 'hashed';
     userInfo = { username: 'xyz', passwordHash: hashed, name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
     statelessAuthInstance = statelessAuth({
       providers: {
