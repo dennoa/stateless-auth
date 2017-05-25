@@ -208,11 +208,12 @@ describe('stateless authentication', ()=> {
         });
       });
 
-      it('should pass the request body to the standardiseUserInfo function for ' + provider.name, done => {
+      it('should pass the request body and response to the standardiseUserInfo function for ' + provider.name, done => {
         const customOptions = { providers: {} };
-        let providedReqBody;
-        const myStandardiseUserInfo = (info, reqBody) => {
+        let providedReqBody, providerRes;
+        const myStandardiseUserInfo = (info, reqBody, res) => {
           providedReqBody = reqBody;
+          providerRes = res;
           return {};
         };
         customOptions.providers[provider.name] = { standardiseUserInfo: myStandardiseUserInfo };
@@ -222,6 +223,7 @@ describe('stateless authentication', ()=> {
         const data = { custom: 'data', code: 'code' };
         sendAuthRequest(provider.name, data).expect(200).end((err, res) => {
           expect(providedReqBody).to.deep.equal(data);
+          expect(providerRes).to.be.defined;
           done();
         });
       });

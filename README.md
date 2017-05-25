@@ -128,7 +128,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
 * providers.{{provider}}.userInfoEndpoint is the endpoint for the user info request.
 * providers.{{provider}}.clientSecret is the client secret configured at the provider end. Set this to the relevant value from your provider application.
 * providers.{{provider}}.standardiseUserInfo is the function used to transform user information from the provider into a standard format for your application.
-  This function is passed user information returned by the provider (1st arg) as well as the request body (2nd arg). It returns user information in the format appropriate to your application.
+  This function is passed user information returned by the provider (1st arg) as well as the request body (2nd arg) and response (3rd arg). It returns user information in the format appropriate to your application.
 * providers.{{provider}}.standardiseUserInfoForCookie overrides standardiseUserInfo when deternmining the details for the cookie jwt. If not specified, the standardiseUserInfo function will be used.
 * providers.{{provider}}.tokenEndpointRequiresFormPost is used by the default mechanism for retrieving the access token. If truthy, data sent to the provider will
   be as a form on a POST request. If falsy, data will be sent as a querystring on a GET request.

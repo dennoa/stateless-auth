@@ -17,10 +17,10 @@ describe('secure routes', ()=> {
   });
 
   function sendRequestToBeVerified(path, token, scheme='Bearer') {
-    let app = express();
+    const app = express();
     app.use(bodyParser.json());
     app.use(path, statelessAuthInstance.secure(), (req, res)=> { res.status(200).json({ success: true }); });
-    let req = supertest(app)
+    const req = supertest(app)
       .post(path)
       .set('Accept', 'application/json');
     if (token) {
