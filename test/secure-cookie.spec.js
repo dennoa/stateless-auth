@@ -91,6 +91,7 @@ describe('secure routes with cookie', ()=> {
     login().end((err, res) => {
       sendRequest('/secure').end((err, res) => {
         expect(res.statusCode).to.equal(401);
+        expect(res.body[0]).to.deep.equal({ param: 'credentials', msg: 'unauthorised' });
         done();
       });
     });
@@ -100,6 +101,7 @@ describe('secure routes with cookie', ()=> {
     login().end((err, res) => {
       sendRequest('/secure', ['jwt=invalid; Path=/']).end((err, res) => {
         expect(res.statusCode).to.equal(401);
+        expect(res.body[0]).to.deep.equal({ param: 'credentials', msg: 'unauthorised' });
         done();
       });
     });

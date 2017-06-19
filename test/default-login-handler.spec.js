@@ -75,6 +75,7 @@ describe('default login handler', ()=> {
   it('should return an unauthorized response when the login credentials are invalid', (done)=> {
     sendAuthLoginRequest({ username: userInfo.username, password: 'incorrect' }).end((err, res) => {
       expect(res.statusCode).to.equal(401);
+      expect(res.body[0]).to.deep.equal({ param: 'credentials', msg: 'unauthorised' });
       done();
     });
   });
@@ -82,6 +83,7 @@ describe('default login handler', ()=> {
   it('should return an unauthorized response when the login username is not provided', (done)=> {
     sendAuthLoginRequest({ password: 'incorrect' }).end((err, res) => {
       expect(res.statusCode).to.equal(401);
+      expect(res.body[0]).to.deep.equal({ param: 'credentials', msg: 'unauthorised' });
       done();
     });
   });
@@ -89,6 +91,7 @@ describe('default login handler', ()=> {
   it('should return an unauthorized response when the login password is not provided', (done)=> {
     sendAuthLoginRequest({ username: userInfo.username }).end((err, res) => {
       expect(res.statusCode).to.equal(401);
+      expect(res.body[0]).to.deep.equal({ param: 'credentials', msg: 'unauthorised' });
       done();
     });
   });
@@ -159,6 +162,7 @@ describe('default login handler', ()=> {
     });
     sendAuthLoginRequest({ username: userInfo.username, password: 'incorrect' }).end((err, res) => {
       expect(res.statusCode).to.equal(401);
+      expect(res.body[0]).to.deep.equal({ param: 'credentials', msg: 'unauthorised' });
       done();
     });
   });

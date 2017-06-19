@@ -30,13 +30,21 @@ describe('secure routes', ()=> {
   }
 
   it('should deny access to secure paths where no authentication header has been provided', done => {
-    sendRequestToBeVerified('/secure').expect(401, done);
+    sendRequestToBeVerified('/secure').end((err, res) => {
+      expect(res.statusCode).to.equal(401);
+      expect(res.body[0]).to.deep.equal({ param: 'credentials', msg: 'unauthorised' });
+      done();
+    });
   });
 
   it('should deny access to secure paths where an invalid authentication header has been provided', done => {
     let differentSecret = { jwt: { secret: 'some other secret' } };
     let invalidToken = statelessAuth(differentSecret).jwt.encode({ userId: 'user_id', name: 'Bob' });
-    sendRequestToBeVerified('/secure', invalidToken).expect(401, done);
+    sendRequestToBeVerified('/secure', invalidToken).end((err, res) => {
+      expect(res.statusCode).to.equal(401);
+      expect(res.body[0]).to.deep.equal({ param: 'credentials', msg: 'unauthorised' });
+      done();
+    });
   });
 
   it('should allow access to secure paths where a valid authentication header has been provided', done => {
@@ -46,7 +54,11 @@ describe('secure routes', ()=> {
 
   it('should deny basic-auth access to secure paths where basic-auth is not permitted (default setting)', done => {
     let token = new Buffer('bob:secret').toString('base64');
-    sendRequestToBeVerified('/secure', token, 'Basic').expect(401, done);
+    sendRequestToBeVerified('/secure', token, 'Basic').end((err, res) => {
+      expect(res.statusCode).to.equal(401);
+      expect(res.body[0]).to.deep.equal({ param: 'credentials', msg: 'unauthorised' });
+      done();
+    });
   });
 
   it('should allow basic-auth access to secure paths where basic-auth is permitted', done => {
