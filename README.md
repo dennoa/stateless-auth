@@ -121,7 +121,7 @@ Any of the default options can be overridden. See below for an explanation and t
 Note: {{provider}} is one of facebook, google, github or linkedin. See below for details of default login provider support.
 
 * jwt.secret is used to create a JWT from the user info and to decode the JWT on subsequent requests. Set this to something that only your application knows about.
-* jwt.expiresAfterSecs determines how long it takes for a JWT to expire.
+* jwt.expiresAfterSecs determines how long it takes for a JWT to expire. This can be a number or a function that returns a number.
 * jwtCookie.isEnabled determines whether or not authentication is supported via a cookie in addition to the normal Authorization header.
 * jwtCookie.name is the name of the cookie that contains the jwt.
 * providers.{{provider}}.tokenEndpoint is the endpoint for the token request.
