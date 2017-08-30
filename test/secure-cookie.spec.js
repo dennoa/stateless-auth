@@ -17,7 +17,7 @@ describe('secure routes with cookie', ()=> {
     providers = {
       login: {
         findUser: () => ({ username: 'bob' }),
-        comparePassword: () => true,
+        passwordSupport: { compare: () => true },
       }
     };
     statelessAuthInstance = statelessAuth({ jwtCookie: { isEnabled: true }, providers });

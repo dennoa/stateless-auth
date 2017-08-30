@@ -6,26 +6,30 @@ const supertest = require('supertest');
 const expect = require('chai').expect;
 
 const statelessAuth = require('../lib');
-const simpleHash = require('../lib/simple-hash');
 
 describe('default login handler', ()=> {
 
   const expectedError = { error: 'Expected for testing' };
-  let statelessAuthInstance, userInfo;
+  let statelessAuthInstance, userInfo, passwordSupport;
 
-  beforeEach(()=> {
-    userInfo = { username: 'xyz', passwordHash: simpleHash('secret'), name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
-    statelessAuthInstance = statelessAuth({
-      providers: {
-        login: {
-          findUser: (credentials => new Promise((resolve, reject) => {
-            if (credentials.username === userInfo.username) {
-              return resolve(userInfo);
-            }
-            reject();
-          }))
+  beforeEach(done => {
+    passwordSupport = statelessAuth.passwordSupport({ rounds: 1 });
+    passwordSupport.hash('secret').then(passwordHash => {
+      userInfo = { username: 'xyz', passwordHash, name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
+      statelessAuthInstance = statelessAuth({
+        providers: {
+          login: {
+            findUser: (credentials => new Promise((resolve, reject) => {
+              if (credentials.username === userInfo.username) {
+                return resolve(userInfo);
+              }
+              reject();
+            })),
+            passwordSupport,
+          }
         }
-      }
+      });
+      done();
     });
   });
 
@@ -55,7 +59,7 @@ describe('default login handler', ()=> {
     verifyJWT(res);
   }
 
-  it('should login when the login-handler has been configured with an appropriate findUser function', (done)=> {
+  it('should login when the login-handler has been configured with an appropriate findUser function', done => {
     sendAuthLoginRequest({ username: userInfo.username, password: 'secret' }).end((err, res) => {
       expect(res.statusCode).to.equal(200);
       verifyResponse(res);
@@ -63,16 +67,16 @@ describe('default login handler', ()=> {
     });
   });
 
-  it('should return an error when the login-handler has not been configured with an appropriate findUser function', (done)=> {
+  it('should return an error when the login-handler has not been configured with an appropriate findUser function', done => {
     statelessAuthInstance = statelessAuth();
     sendAuthLoginRequest({ username: userInfo.username, password: 'secret' }).end((err, res) => {
       expect(res.statusCode).to.equal(500);
-      expect(!!res.body.error).to.equal(true);
+      expect(res.body.error).to.equal('An implementation for findUser must be provided');
       done();
     });
   });
 
-  it('should return an unauthorized response when the login credentials are invalid', (done)=> {
+  it('should return an unauthorized response when the login credentials are invalid', done => {
     sendAuthLoginRequest({ username: userInfo.username, password: 'incorrect' }).end((err, res) => {
       expect(res.statusCode).to.equal(401);
       expect(res.body[0]).to.deep.equal({ param: 'credentials', msg: 'unauthorised' });
@@ -80,7 +84,7 @@ describe('default login handler', ()=> {
     });
   });
 
-  it('should return an unauthorized response when the login username is not provided', (done)=> {
+  it('should return an unauthorized response when the login username is not provided', done => {
     sendAuthLoginRequest({ password: 'incorrect' }).end((err, res) => {
       expect(res.statusCode).to.equal(401);
       expect(res.body[0]).to.deep.equal({ param: 'credentials', msg: 'unauthorised' });
@@ -88,7 +92,7 @@ describe('default login handler', ()=> {
     });
   });
 
-  it('should return an unauthorized response when the login password is not provided', (done)=> {
+  it('should return an unauthorized response when the login password is not provided', done => {
     sendAuthLoginRequest({ username: userInfo.username }).end((err, res) => {
       expect(res.statusCode).to.equal(401);
       expect(res.body[0]).to.deep.equal({ param: 'credentials', msg: 'unauthorised' });
@@ -96,34 +100,37 @@ describe('default login handler', ()=> {
     });
   });
 
-  it('should allow standardiseUserInfo to be overridden to conform to the application model', (done)=> {
-    userInfo = { id: 'xyz', passwordHash: simpleHash('secret'), name: { first: 'Bob', last: 'Brown' }, email: 'bob.brown@email.com', picture: 'http://my.picture.com' };
-    statelessAuthInstance = statelessAuth({
-      providers: {
-        login: {
-          findUser: (credentials => new Promise((resolve, reject) => {
-            if (credentials.id === userInfo.id) {
-              return resolve(userInfo);
-            }
-            reject();
-          })),
-          standardiseUserInfo: null,
-          modelmap: {
-            credentials: {
-              username: 'id'
+  it('should allow standardiseUserInfo to be overridden to conform to the application model', done => {
+    passwordSupport.hash('secret').then(passwordHash => {
+      userInfo = { id: 'xyz', passwordHash, name: { first: 'Bob', last: 'Brown' }, email: 'bob.brown@email.com', picture: 'http://my.picture.com' };
+      statelessAuthInstance = statelessAuth({
+        providers: {
+          login: {
+            findUser: (credentials => new Promise((resolve, reject) => {
+              if (credentials.id === userInfo.id) {
+                return resolve(userInfo);
+              }
+              reject();
+            })),
+            passwordSupport,
+            standardiseUserInfo: null,
+            modelmap: {
+              credentials: {
+                username: 'id'
+              }
             }
           }
         }
-      }
-    });
-    sendAuthLoginRequest({ id: userInfo.id, password: 'secret' }).expect(200).end((err, res) => {
-      expect(res.statusCode).to.equal(200);
-      expect(res.body.user_info).to.deep.equal(userInfo);
-      done();
+      });
+      sendAuthLoginRequest({ id: userInfo.id, password: 'secret' }).expect(200).end((err, res) => {
+        expect(res.statusCode).to.equal(200);
+        expect(res.body.user_info).to.deep.equal(userInfo);
+        done();
+      });
     });
   });
 
-  it('should allow comparePassword to be overridden', (done)=> {
+  it('should allow passwordSupport to be overridden', done => {
     const hashed = 'hashed';
     userInfo = { username: 'xyz', passwordHash: hashed, name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
     statelessAuthInstance = statelessAuth({
@@ -135,7 +142,7 @@ describe('default login handler', ()=> {
             }
             reject();
           })),
-          comparePassword: (password, hash) => Promise.resolve(hash === hashed)
+          passwordSupport: { compare: (password, hash) => Promise.resolve(hash === hashed) }
         }
       }
     });
@@ -145,7 +152,30 @@ describe('default login handler', ()=> {
     });
   });
 
-  it('should return an unauthorized response when the overridden comparePassword function returns false', (done)=> {
+  it('should allow passwordSupport to be overridden with a different configuration of the default implementation', done => {
+    statelessAuthInstance = statelessAuth({
+      providers: {
+        login: {
+          findUser: (credentials => new Promise((resolve, reject) => {
+            if (credentials.username === userInfo.username) {
+              return resolve(userInfo);
+            }
+            reject();
+          })),
+          passwordSupport: statelessAuth.passwordSupport({ rounds: 2 })
+        }
+      }
+    });
+    statelessAuthInstance.options.providers.login.passwordSupport.hash('secret').then(passwordHash => {
+      userInfo = { username: 'xyz', passwordHash, name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
+      sendAuthLoginRequest({ username: userInfo.username, password: 'secret' }).expect(200).end((err, res) => {
+        verifyResponse(res);
+        done();
+      });
+    });
+  });
+
+  it('should return an unauthorized response when the overridden passwordSupport.compare function returns false', done => {
     userInfo = { username: 'xyz', passwordHash: 'hashed', name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
     statelessAuthInstance = statelessAuth({
       providers: {
@@ -156,7 +186,7 @@ describe('default login handler', ()=> {
             }
             reject();
           })),
-          comparePassword: (password, hash) => Promise.resolve(false)
+          passwordSupport: { compare: (password, hash) => Promise.resolve(false) }
         }
       }
     });
@@ -167,7 +197,7 @@ describe('default login handler', ()=> {
     });
   });
 
-  it('should allow the password credential name to be overridden', (done)=> {
+  it('should allow the password credential name to be overridden', done => {
     statelessAuthInstance = statelessAuth({
       providers: {
         login: {
@@ -177,6 +207,7 @@ describe('default login handler', ()=> {
             }
             reject();
           })),
+          passwordSupport,
           modelmap: {
             credentials: {
               password: 'loginPassword'
@@ -191,28 +222,31 @@ describe('default login handler', ()=> {
     });
   });
 
-  it('should allow the passwordHash user info model name to be overridden', (done)=> {
-    userInfo = { username: 'xyz', hashedPassword: simpleHash('secret'), name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
-    statelessAuthInstance = statelessAuth({
-      providers: {
-        login: {
-          findUser: (credentials => new Promise((resolve, reject) => {
-            if (credentials.username === userInfo.username) {
-              return resolve(userInfo);
-            }
-            reject();
-          })),
-          modelmap: {
-            userInfo: {
-              passwordHash: 'hashedPassword'
+  it('should allow the passwordHash user info model name to be overridden', done => {
+    passwordSupport.hash('secret').then(hashedPassword => {
+      userInfo = { username: 'xyz', hashedPassword, name: 'some body', email: 'my@email.com', picture: 'http://my.picture.com' };
+      statelessAuthInstance = statelessAuth({
+        providers: {
+          login: {
+            findUser: (credentials => new Promise((resolve, reject) => {
+              if (credentials.username === userInfo.username) {
+                return resolve(userInfo);
+              }
+              reject();
+            })),
+            passwordSupport,
+            modelmap: {
+              userInfo: {
+                passwordHash: 'hashedPassword'
+              }
             }
           }
         }
-      }
-    });
-    sendAuthLoginRequest({ username: userInfo.username, password: 'secret' }).expect(200).end((err, res) => {
-      verifyResponse(res);
-      done();
+      });
+      sendAuthLoginRequest({ username: userInfo.username, password: 'secret' }).expect(200).end((err, res) => {
+        verifyResponse(res);
+        done();
+      });
     });
   });
 

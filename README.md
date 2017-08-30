@@ -38,7 +38,7 @@ The process is like this:
           findUser: (credentials => {
             //TODO: Lookup user info and callback
             //e.g. return UserModel.findOne({ username: credentials.username });
-            Promise.reject();
+            return Promise.reject(new Error('Not Implemented));
           }
         }
       }
@@ -229,9 +229,8 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
           }),
           standardiseUserInfoForCookie: null,
           grantType: 'password',
-          findUser: () => Promise.reject({ error: 'An implementation for findUser must be provided' }),
-          hashPassword: simpleHash,
-          comparePassword: (password, passwordHash) => Promise.resolve(simpleHash(password) === passwordHash),
+          findUser: () => Promise.reject(new Error('An implementation for findUser must be provided')),
+          passwordSupport: passwordSupport({ rounds: 10 }),
           modelmap: {
             credentials: { username: 'username', password: 'password' },
             userInfo: { passwordHash: 'passwordHash' }
@@ -269,8 +268,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
     });
 
 ### Default login options
-The default implementation for logging in with a username and password assumes the application holds a hash of the password as part of the user info (no actual password should
-be stored). It looks for username and password properties on the auth/login request and a passwordHash property on the user info model. (These names can be overridden).
+The default implementation for logging in with a username and password assumes the application holds a hash of the password as part of the user info. It looks for username and password properties on the auth/login request and a passwordHash property on the user info model. (These names can be overridden).
 
 At a minimum, a custom findUser function must be provided. The default implementation calls back with an error reminding you to provide an implementation appropriate to your
 application. 
@@ -292,18 +290,31 @@ Full default login options are listed with the global options above.
         });
 
   The credentials passed to login.findUser will be whatever is posted on the /auth/login request.
-* login.hashPassword is no longer used but has been retained for backward compatibility. The default implementation is sha256 formatted as base64. If you call this function from other places - e.g. during user registration or any password update facility where you will need to save a hashed password - then you can navigate the options to gain access to the hashPassword function like this:
-
-        const auth = require('./auth'); //Your configured auth module
-
-        const hashPassword = auth.options.providers.login.hashPassword;
-
-* login.comparePassword is used to compare a password with a hash. It returns a Promise that resolves to a truthy or falsy value depending on whether or not the password matches the hash. The default implementation hashes the password with sha256 formatted as base64 and compares the result to the provided hash. You can override this function something like this:
+* login.passwordSupport is an object with a compare function that compares a password with a hash. The compare function returns a truthy or falsy value depending on whether or not the password matches the hash. It can also return a Promise that resolves to a truthy or falsy value. The default passwordSupport implementation uses bcrypt with 10 rounds to generate salted hashes. You can override it something like this:
 
         module.exports = require('stateless-auth')({
           providers: {
             login: {
-              comparePassword: (password, passwordHash) => Promise.resolve(hashIt(password) === passwordHash)
+              passwordSupport: {
+                compare: (password, passwordHash) => Promise.resolve(hashIt(password) === passwordHash)
+              }
+            }
+          }
+        });
+
+The default passwordSupport implementation provides hash and compare functions. To use the hash function that corresponds with the default compare:
+
+        auth.options.providers.login.passwordSupport.hash(somePassword).then(passwordHash => {
+          //save the passwordHash for subsequent authentication
+        });
+
+The factory that creates the default passwordSupport instance can be used with a different number of rounds to generate salted hashes:
+
+        const statelessAuth = require('stateless-auth');
+        module.exports = statelessAuth({
+          providers: {
+            login: {
+              passwordSupport: statelessAuth.passwordSupport({ rounds: 12 })
             }
           }
         });

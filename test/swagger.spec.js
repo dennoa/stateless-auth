@@ -27,7 +27,7 @@ describe('swagger documentation', ()=> {
       .send();
   }
 
-  it('should provide default swagger document information when specific options are not configured', (done)=> {
+  it('should provide default swagger document information when specific options are not configured', done => {
     requestSwaggerDocs().expect(200).end((err, res) => {
       ['swagger', 'info', 'basePath', 'consumes', 'produces', 'tags'].forEach(key => {
         expect(!!res.body[key]).to.equal(true);
@@ -37,7 +37,7 @@ describe('swagger documentation', ()=> {
     });    
   });
 
-  it('should allow the swagger document information to be modified', (done)=> {
+  it('should allow the swagger document information to be modified', done => {
     const customOptions = {
       swagger: { 
         docs: {
@@ -58,7 +58,7 @@ describe('swagger documentation', ()=> {
     });    
   });
 
-  it('should list operations for each provider', (done)=> {
+  it('should list operations for each provider', done => {
     requestSwaggerDocs().expect(200).end((err, res) => {
       _.forEach(statelessAuthInstance.options.providers, (value, provider) => {
         expect(!!res.body.paths['/' + provider]).to.equal(true);
@@ -67,7 +67,7 @@ describe('swagger documentation', ()=> {
     });
   });
 
-  it('should provide definitions for the operations scoped using the basePath and pathPrefix', (done)=> {
+  it('should provide definitions for the operations scoped using the basePath and pathPrefix', done => {
     requestSwaggerDocs().expect(200).end((err, res) => {
       ['authorization_code', 'username_password', 'jwt_user'].forEach(name => {
         expect(!!res.body.definitions['auth_' + name]).to.equal(true);
@@ -76,7 +76,7 @@ describe('swagger documentation', ()=> {
     });    
   });
 
-  it('should allow the swagger paths and definitions to be modified', (done)=> {
+  it('should allow the swagger paths and definitions to be modified', done => {
     const customOptions = {
       swagger: { 
         docs: {
@@ -116,7 +116,7 @@ describe('swagger documentation', ()=> {
     });    
   });
 
-  it('should allow the swagger tag description to be modified', (done)=> {
+  it('should allow the swagger tag description to be modified', done => {
     const customOptions = {
       swagger: { 
         docs: {

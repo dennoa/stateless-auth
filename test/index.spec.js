@@ -268,4 +268,8 @@ describe('stateless authentication', ()=> {
     });
   });
 
+  it('should expose the default password-support implementation', () => {
+    expect(typeof statelessAuth.passwordSupport).to.equal('function');
+  });
+
 });
