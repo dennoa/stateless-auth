@@ -1,6 +1,6 @@
 {
   "name": "stateless-auth",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "Support for authenticated requests without server-side session state",
   "main": "index.js",
   "engines": {

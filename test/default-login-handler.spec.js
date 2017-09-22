@@ -114,7 +114,7 @@ describe('default login handler', ()=> {
             })),
             passwordSupport,
             standardiseUserInfo: null,
-            modelmap: {
+            modelMap: {
               credentials: {
                 username: 'id'
               }
@@ -208,7 +208,7 @@ describe('default login handler', ()=> {
             reject();
           })),
           passwordSupport,
-          modelmap: {
+          modelMap: {
             credentials: {
               password: 'loginPassword'
             }
@@ -235,7 +235,7 @@ describe('default login handler', ()=> {
               reject();
             })),
             passwordSupport,
-            modelmap: {
+            modelMap: {
               userInfo: {
                 passwordHash: 'hashedPassword'
               }

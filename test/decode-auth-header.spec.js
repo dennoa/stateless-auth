@@ -34,16 +34,16 @@ describe('decode authorization header', ()=> {
     req.get = key => {
       return (key === 'Authorization') ? 'Basic ' + creds : null;
     };
-    const decoded = statelessAuthInstance.decodeAuthHeader(req, { basicAuth: true });
-    expect(decoded.username).to.equal('username');
-    expect(decoded.password).to.equal('password');
+    const decoded = statelessAuthInstance.decodeAuthHeader(req, { basicAuth: { isEnabled: true } });
+    expect(decoded[0]).to.equal('username');
+    expect(decoded[1]).to.equal('password');
   });
 
   it('should return undefined when decoding a basic authentication request where basic-auth is not permitted', ()=> {
     req.get = key => {
       return (key === 'Authorization') ? 'Basic ' + Buffer.from('username:password').toString('base64') : null;
     };
-    const decoded = statelessAuthInstance.decodeAuthHeader(req, { basicAuth: false });
+    const decoded = statelessAuthInstance.decodeAuthHeader(req, { basicAuth: { isEnabled: false }});
     expect(typeof decoded).to.equal('undefined');
   });
 
@@ -59,7 +59,7 @@ describe('decode authorization header', ()=> {
     req.get = key => {
       return (key === 'Authorization') ? 'Basic' : null;
     };
-    const decoded = statelessAuthInstance.decodeAuthHeader(req, { basicAuth: true });
+    const decoded = statelessAuthInstance.decodeAuthHeader(req, { basicAuth: { isEnabled: true } });
     expect(typeof decoded).to.equal('undefined');
   });
 

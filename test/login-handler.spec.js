@@ -19,7 +19,7 @@ describe('login-handler', ()=> {
           reject();
         })),
         passwordSupport,
-        modelmap: {
+        modelMap: {
           credentials: { username: 'username', password: 'password' },
           userInfo: { passwordHash: 'passwordHash' }
         }
@@ -64,7 +64,7 @@ describe('login-handler', ()=> {
     login = loginHandler({
       findUser: (credentials => new Promise((resolve,reject) => reject(expectedError))),
       passwordSupport,
-      modelmap: {
+      modelMap: {
         credentials: { username: 'username', password: 'password' },
         userInfo: { passwordHash: 'passwordHash' }
       }
@@ -83,7 +83,7 @@ describe('login-handler', ()=> {
         reject();
       })),
       passwordSupport,
-      modelmap: {
+      modelMap: {
         credentials: { username: 'loginEmail', password: 'password' },
         userInfo: { passwordHash: 'passwordHash' }
       }
@@ -101,7 +101,7 @@ describe('login-handler', ()=> {
         reject();
       })),
       passwordSupport,
-      modelmap: {
+      modelMap: {
         credentials: { username: 'username', password: 'password' },
         userInfo: { passwordHash: 'passwordHash' }
       }
@@ -116,7 +116,7 @@ describe('login-handler', ()=> {
     passwordSupport.hash('secret').then(encodedPassword => {
       user = { name: 'Bobby', encodedPassword, email: 'bobby@home.com', picture: 'http://bobby.avatar.com' };
       login = loginHandler({
-        modelmap: {
+        modelMap: {
           credentials: { username: 'email', password: 'password' },
           userInfo: { passwordHash: 'encodedPassword' }
         },
@@ -135,7 +135,7 @@ describe('login-handler', ()=> {
 
   it('should allow the password property provided with the credentials to be called something else', done =>{
     login = loginHandler({
-      modelmap: {
+      modelMap: {
         credentials: { username: 'email', password: 'loginPassword' },
         userInfo: { passwordHash: 'passwordHash' }
       },

@@ -109,11 +109,21 @@ You will likely want to make use of the swagger.pathPrefix option in this case.
     app.use('/secure', auth.secure({ reslocal: 'userInfo' })); //Puts decoded JWT user info into res.locals.userInfo 
 
 ### Support basic authentication access in addition to JWT
-Basic authentication uses the login provider to retrieve user details and validate credentials. It cannot be used without a login provider implementation.
+Basic authentication requires a login handler to retrieve user details and validate credentials. By default it uses the login provider handler implementation.
 
     const auth = require('./auth'); //Your configured auth module
 
-    app.use('/secure', auth.secure({ basicAuth: true })); 
+    // Use the login provider handler implementation
+    app.use('/secure', auth.secure({ basicAuth: { isEnabled: true } }));
+
+    // Use a different login handler
+    function loginHandler(creds) {
+      const username = creds[0];
+      const password = creds[1];
+      const userInfo = login(username, password);
+      return userInfo;
+    }
+    app.use('/secure', auth.secure({ basicAuth: { isEnabled: true, loginHandler } }));
 
 ## Global options
 Any of the default options can be overridden. See below for an explanation and the default options.
@@ -122,7 +132,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
 
 * jwt.secret is used to create a JWT from the user info and to decode the JWT on subsequent requests. Set this to something that only your application knows about.
 * jwt.expiresAfterSecs determines how long it takes for a JWT to expire. This can be a number or a function that returns a number.
-* jwtCookie.isEnabled determines whether or not authentication is supported via a cookie in addition to the normal Authorization header.
+* jwtCookie.isEnabled determines whether or not authentication is supported via a cookie in addition to the normal Authorization header. To enable cookie authentication, you must also include the cookie-parser middleware for express.
 * jwtCookie.name is the name of the cookie that contains the jwt.
 * providers.{{provider}}.tokenEndpoint is the endpoint for the token request.
 * providers.{{provider}}.userInfoEndpoint is the endpoint for the user info request.
@@ -138,7 +148,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
 * proxy should be set to the address of your proxy server if you are running in an environment where access to the OAuth2 provider is via a corporate proxy or something similar.
 * secure.reslocal can be set to the name of a property on "res.locals" where the decoded JWT for the current request should be put. Use this to specify a variable name that will
   be used wherever the auth.secure() middleware is used. Note that the variable name specified here can be overridden by any individual auth.secure() instance as outlined above.
-* secure.basicAuth can be set to true to allow any valid basic authentication request to gain access to the secured path.
+* secure.basicAuth.isEnabled can be set to true to allow any valid basic authentication request to gain access to the secured path.
 * swagger.path is the subpath for retrieving the swagger documentation for the various authentication operations. E.g. GET /auth/swagger.
 * swagger.pathPrefix will be prepended to each of the provider paths. For example, you could set swagger.docs.basePath to '/' and swagger.pathPrefix to '/auth'. Useful if you
   want to merge the auth swagger docs into your application swagger docs and the basePath needs to apply to the application docs.
@@ -147,125 +157,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
   of the swagger specification.
 
 ### Default options
-
-    module.exports = require('stateless-auth')({
-  
-      jwt: {
-        secret: 'JWT_SECRET',
-        expiresAfterSecs: 12*60*60
-      },
-
-      jwtCookie: {
-        isEnabled: false,
-        name: 'jwt'
-      },
-
-      providers: {
-
-        facebook: {
-          tokenEndpoint: 'https://graph.facebook.com/v2.5/oauth/access_token',
-          userInfoEndpoint: 'https://graph.facebook.com/v2.5/me?fields=id,email,first_name,last_name,link,name',
-          clientSecret: 'CLIENT_SECRET',
-          standardiseUserInfo: userInfo => ({
-            ids: { facebook: userInfo.id },
-            email: userInfo.email,
-            name: userInfo.name,
-            picture: `https://graph.facebook.com/v2.5/${userInfo.id}/picture?type=large`
-          }),
-          standardiseUserInfoForCookie: null,
-        },
-
-        github: {
-          tokenEndpoint: 'https://github.com/login/oauth/access_token',
-          userInfoEndpoint: 'https://api.github.com/user',
-          clientSecret: 'CLIENT_SECRET',
-          standardiseUserInfo: userInfo => ({
-            ids: { github: userInfo.id },
-            email: userInfo.email,
-            name: userInfo.name,
-            picture: userInfo.avatar_url
-          }),
-          standardiseUserInfoForCookie: null,
-          userInfoEndpointAuthorizationHeader: 'token'
-        },
-
-        google: {
-          tokenEndpoint: 'https://www.googleapis.com/oauth2/v4/token',
-          userInfoEndpoint: 'https://www.googleapis.com/oauth2/v3/userinfo',
-          clientSecret: 'CLIENT_SECRET',      
-          standardiseUserInfo: userInfo => ({
-            ids: { google: userInfo.sub },
-            email: userInfo.email,
-            name: userInfo.name,
-            picture: userInfo.picture
-          }),
-          standardiseUserInfoForCookie: null,
-          tokenEndpointRequiresFormPost: true,
-          userInfoEndpointAuthorizationHeader: 'Bearer'
-        },
-
-        linkedin: {
-          tokenEndpoint: 'https://www.linkedin.com/uas/oauth2/accessToken',
-          userInfoEndpoint: 'https://api.linkedin.com/v1/people/~:(id,first-name,last-name,email-address,picture-url)?format=json',
-          clientSecret: 'CLIENT_SECRET',      
-          standardiseUserInfo: userInfo => ({
-            ids: { linkedin: userInfo.id },
-            email: userInfo.emailAddress,
-            name: userInfo.firstName + ' ' + userInfo.lastName,
-            picture: userInfo.pictureUrl
-          }),
-          standardiseUserInfoForCookie: null,
-          tokenEndpointRequiresFormPost: true,
-          userInfoEndpointAuthorizationHeader: 'Bearer'
-        },
-
-        login: {
-          handler: loginHandler,
-          standardiseUserInfo: userInfo => ({
-            ids: { login: userInfo.username },
-            email: userInfo.email,
-            name: userInfo.name,
-            picture: userInfo.picture
-          }),
-          standardiseUserInfoForCookie: null,
-          grantType: 'password',
-          findUser: () => Promise.reject(new Error('An implementation for findUser must be provided')),
-          passwordSupport: passwordSupport({ rounds: 10 }),
-          modelmap: {
-            credentials: { username: 'username', password: 'password' },
-            userInfo: { passwordHash: 'passwordHash' }
-          }
-        }
-
-      },
-
-      proxy: null,
-
-      secure: {
-        reslocal: null,
-        basicAuth: false
-      },
-
-      swagger: {
-        path: '/swagger',
-        pathPrefix: '',
-        docs: {
-          swagger: '2.0',
-          info: {
-            title: 'Authentication API',
-            description: 'Authentication API',
-            version: '1.0'
-          },
-          basePath: '/auth',
-          consumes: ['application/json'],
-          produces: ['application/json'],
-          tags: [
-            { name: 'authentication', description: 'authentication' }
-          ]
-        }
-      }
-
-    });
+lib/options.js holds the default options.
 
 ### Default login options
 The default implementation for logging in with a username and password assumes the application holds a hash of the password as part of the user info. It looks for username and password properties on the auth/login request and a passwordHash property on the user info model. (These names can be overridden).
@@ -319,9 +211,9 @@ The factory that creates the default passwordSupport instance can be used with a
           }
         });
 
-* login.modelmap.credentials.password specifies the name of the property that holds the password as posted on the /auth/login request. Override this if you want to use a name
+* login.modelMap.credentials.password specifies the name of the property that holds the password as posted on the /auth/login request. Override this if you want to use a name
   other than 'password' such as 'loginPassword' for example.
-* login.modelmap.userInfo.passwordHash specifies the name of the property on the user info model that holds the password hash. Override this if you want to use a name
+* login.modelMap.userInfo.passwordHash specifies the name of the property on the user info model that holds the password hash. Override this if you want to use a name
   other than 'passwordHash'.
 
 ## Adding another provider
@@ -364,4 +256,43 @@ If you need a different handler implementation for any reason, you can configure
     auth.routeHandlers; // Middleware handlers for each of the routes, e.g. routeHandlers.facebook, routeHandlers.login, etc.
     auth.secure; // Middleware for securing routes
     auth.swagger; // The swagger docs describing the stateless auth operations
+
+# stateless-auth/lite
+Provides just the token verification bits - no login handlers. 
+
+Note that if you want to support basic authentication you will need to provide a secure.basicAuth.loginHandler implementation. See above for details on implementing one of those.
+
+## Example usage 
+
+### Create a lite auth module with your configuration options
+
+    const liteAuth = require('stateless-auth/lite')({
+      jwt: {
+        secret: 'MY_SECRET',
+      },
+    });
+
+The default options relevant to the lite auth functions are:
+
+    jwt: {
+      secret: 'JWT_SECRET',
+      expiresAfterSecs: 12*60*60,
+    },
+    jwtCookie: {
+      isEnabled: false,
+      name: 'jwt',
+    },
+    secure: {
+      reslocal: null,
+      basicAuth: { isEnabled: false, loginHandler: null },
+    },
+
+
+### Use the lite auth functions
+
+    const opts = liteAuth.options; // The provided options combined with the defaults.
+    
+    const decoded = decodeAuthHeader(req); // Decodes the JWT on the Authorization header or from the cookie if jwtCookie.isEnabled
+
+    app.use('/secure', secure(), myRequestHandler); // Use the secure express middleware. See above for secure options
 

@@ -62,7 +62,7 @@ describe('secure routes', ()=> {
   });
 
   it('should allow basic-auth access to secure paths where basic-auth is permitted', done => {
-    statelessAuthInstance = statelessAuth({ secure: { basicAuth: true }, providers: { login: {
+    statelessAuthInstance = statelessAuth({ secure: { basicAuth: { isEnabled: true } }, providers: { loginBasicAuth: {
       findUser: () => {
         return Promise.resolve({ name: 'Bob', passwordHash: 'secret' });
       },
@@ -73,7 +73,7 @@ describe('secure routes', ()=> {
   });
 
   it('should place user login details on res.local for basic-auth access when specified in global options', done => {
-    statelessAuthInstance = statelessAuth({ secure: { basicAuth: true, reslocal: 'basicUserInfo' }, providers: { login: {
+    statelessAuthInstance = statelessAuth({ secure: { basicAuth: { isEnabled: true }, reslocal: 'basicUserInfo' }, providers: { loginBasicAuth: {
       findUser: () => {
         return Promise.resolve({ name: 'Bob', passwordHash: 'secret' });
       },
@@ -90,6 +90,14 @@ describe('secure routes', ()=> {
       expect(res.statusCode).to.equal(200);
       done();
     });
+  });
+
+  it('should allow specification of a basic-auth loginHandler', done => {
+    statelessAuthInstance = statelessAuth({ secure: { basicAuth: { isEnabled: true,
+      loginHandler: creds => ({ username: 'bob', email: 'bob@home.com' }),
+    }}});
+    let token = new Buffer('bob:secret').toString('base64');
+    sendRequestToBeVerified('/secure', token, 'Basic').expect(200, done);
   });
 
   it('should place valid user info on res.local when specified in the global options', done => {
