@@ -144,6 +144,7 @@ Note: {{provider}} is one of facebook, google, github or linkedin. See below for
   be as a form on a POST request. If falsy, data will be sent as a querystring on a GET request.
 * providers.{{provider}}.userInfoEndpointAuthorizationHeader is used by the default mechanism for retrieving user information. If specified, the value will be used to
   construct an Authorization header containing the access token. If not specified, the access token will be sent to the provider as a querystring.
+* providers.{{provider}}.excludeFromRoutes can be set to true to exclude this provider from the available routes.
 * providers.login configures the default mechanism for authenticating with a username and password. See below for more details on configuring this option.
 * proxy should be set to the address of your proxy server if you are running in an environment where access to the OAuth2 provider is via a corporate proxy or something similar.
 * secure.reslocal can be set to the name of a property on "res.locals" where the decoded JWT for the current request should be put. Use this to specify a variable name that will

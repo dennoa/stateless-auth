@@ -61,7 +61,7 @@ describe('swagger documentation', ()=> {
   it('should list operations for each provider', done => {
     requestSwaggerDocs().expect(200).end((err, res) => {
       _.forEach(statelessAuthInstance.options.providers, (value, provider) => {
-        expect(!!res.body.paths['/' + provider]).to.equal(true);
+        expect(!!res.body.paths['/' + provider]).to.equal(!value.excludeFromRoutes);
       });
       done();
     });
@@ -143,7 +143,7 @@ describe('swagger documentation', ()=> {
     requestSwaggerDocs().end((err, res) => {
       expect(res.statusCode).to.equal(200);
       _.forEach(statelessAuthInstance.options.providers, (value, provider) => {
-        expect(!!res.body.paths['/prefix/' + provider]).to.equal(true);
+        expect(!!res.body.paths['/prefix/' + provider]).to.equal(!value.excludeFromRoutes);
       });
       done();
     });    
