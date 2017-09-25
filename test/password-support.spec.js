@@ -3,7 +3,7 @@
 const sinon = require('sinon');
 const expect = require('chai').expect;
 const bcrypt = require('bcryptjs');
-const passwordSupport = require('../lib/password-support');
+const passwordSupport = require('../password-support');
 
 describe('password-support', () => {
 

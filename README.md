@@ -297,3 +297,13 @@ The default options relevant to the lite auth functions are:
 
     app.use('/secure', secure(), myRequestHandler); // Use the secure express middleware. See above for secure options
 
+#stateless-auth/password-support
+To just get the password support functionality without other bits:
+
+    const passwordSupport = require('stateless-auth/password-support')({
+      rounds: 10,
+    });
+
+This uses <https://www.npmjs.com/package/bcrypt> to generate the salt and password hash. Rounds are the salted rounds provided to bcrypt - more rounds = higher cost of processing so more expensive to brute-force attack. Default is 10. 
+
+Note: If you include the password hash function in unit tests then you might want to set the rounds to 1 to speed things along a bit.
